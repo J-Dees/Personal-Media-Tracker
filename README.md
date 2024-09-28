@@ -1,7 +1,7 @@
 # CSC 365 Group Project
 ## Jonathan Dees - jdees@calpoly.edu
 ## Paul Motter - pmotter@calpoly.edu
-## Connor Villanueva - cvillan@calpoly.edu
+## Connor Villanueva - ckvillan@calpoly.edu
 ## Aiden Ng - ang59@calpoly.edu
 
 ### Constraints: Need 12 potential users/test cases, 12 exception handling
