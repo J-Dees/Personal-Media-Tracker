@@ -7,9 +7,11 @@
 ### Constraints: Need 12 potential users/test cases, 12 exception handling
 
 - Idea 1: Health Tracker App (calorie intake, nutrient deficiency)
-  - track calories and macronutrients.
-  - could possibly interface with a database of common food items.
-  - Could consider time gaps and exercise to calculate caloric/nutrient needs. 
+  - Track calories and macronutrients.
+  - Could interface with a database of common food items and their nutritional information or directly input nutritional information.
+  - Would be able to input exercises and activities to better calculate nutritional needs.
+  - Choose preset diets such as kito or bulking or cutting for working out or health reasons. Adjacent to this would be adding allergy considerations.  
+  - Would give tips and warnings describing nutrient deficiencies and possible fixes.
 - Idea 2: Some sort of schedule planner/booker (school, business)
   - Day-by-day schedules with repeated events and one-time events.
   - Have to-do lists allow the creation of multiple daily tasks, monthly tasks, and random side projects.
