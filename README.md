@@ -17,3 +17,10 @@
   - Have to-do lists allow the creation of multiple daily tasks, monthly tasks, and random side projects.
   - Reminder notifications?
 - Idea 3: Some sort of networking app (contact manager or social media app)
+
+- Personal Media Tracker.
+  - Create custom lists to track any hobby/media (movies, TV shows, books, recipes, pokemon cards)
+  - Public viewing and sharing. Lists can be public or private. you can specifically share a list but also mark certain entries as private and they wont be shared.
+  - Track what movies you've seen and if you liked them, and share recommendations.
+  - Looking into watching a movie? Cross-reference it with what your friends thought about it.
+  - Common lists (Movies, Books, Etc..) and custome lists or interests (pokemon cards, shell collection, tea kettle collection)
