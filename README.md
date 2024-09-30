@@ -7,7 +7,7 @@
 ### Group Project Proposal
 - Personal Media Tracker.
   - Create custom lists to track any hobby/media (movies, TV shows, books, recipes, pokemon cards)
-  - Public viewing and sharing. Lists can be public or private. you can specifically share a list but also mark certain entries as private and they wont be shared.
-  - Track what movies you've seen and if you liked them, and share recommendations.
-  - Looking into watching a movie? Cross-reference it with what your friends thought about it.
-  - Common lists (Movies, Books, Etc..) and custume lists or interests (pokemon cards, shell collection, tea kettle collection)
+  - Public viewing and sharing. Lists can be public, private, or friends only. These access specifiers are for entire lists or specific entries.
+  - Share recommendations and track what movies you've seen, if you liked them, and when you saw them.
+  - Looking into watching a movie? Cross-reference it with what your friends thought about it. No more trusting bribed critiques with poor taste.
+  - Common lists (Movies, Books, Etc..) and custom lists or interests (pokemon cards, shell collection, tea kettle collection)
