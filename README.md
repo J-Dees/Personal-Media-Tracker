@@ -18,7 +18,7 @@
   - Public viewing and sharing. Lists can be public or private. you can specifically share a list but also mark certain entries as private and they wont be shared.
   - Track what movies you've seen and if you liked them, and share recommendations.
   - Looking into watching a movie? Cross-reference it with what your friends thought about it.
-  - Common lists (Movies, Books, Etc..) and custome lists or interests (pokemon cards, shell collection, tea kettle collection)
+  - Common lists (Movies, Books, Etc..) and custume lists or interests (pokemon cards, shell collection, tea kettle collection)
 
 
 
