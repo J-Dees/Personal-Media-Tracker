@@ -1,10 +1,10 @@
 # User Stories and Exceptions
 ## User Stories
-1. user story 1
-2. user story 2
-3. user story 3
-4. user story 4
-5. user story 5
+search specific item 1. user story 1
+search by sort 2. user story 2
+Share recommendations 3. user story 3
+search other's recommendations 4. user story 4
+create custom catalogues 5. user story 5
 6. user story 6
 7. user story 7
 8. user story 8
