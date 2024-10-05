@@ -3,8 +3,8 @@
 1. As an avid movie watcher, I want to know what movies my friends have seen so that I can discuss those movies with them.
 2. As a person who is always looking for something to watch on a Saturday night, I want to get ratings and recommendations from people I know, so I can find a new movie to watch.
 3. As somebody who has watched hundreds of movies, I would like to check if I've seen certain movies and my opinions on them, so I decide whether to rewatch the movie.
-4. --- As an ARPG player, I want to have a list of characters that I own and where they are from so that I know which ones I am missing and still need to collect.
-5. -- As an avid video game completionist, I want to keep track of my achievements in the different games that I play, so that I can show off my accomplishments.
+4. As a gamer, I don't want to waste money on games, so I would like to see my friend's opinions and recommendations on games before making a purchase.
+5. As an avid video game completionist, I want to keep track of the many games I play and have played, so I can share them with friends and possibly find games to play online together.
 6. As an avid reader, I want to track books I would like to read in the future, so I don't forget any suggestions from friends or family.
 7. As a coffee cup collector, I want to manage a catalog of my collection, so that I can efficiently search for items already in my collection.
 8. As a card collector and trader, I want to keep track of my card ratings and prices so I can effectively trade with others at conventions or online.
