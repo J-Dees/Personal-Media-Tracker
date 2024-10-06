@@ -1,4 +1,4 @@
-# CSC 365 Group Project
+# Personal Media Tracker
 ## Jonathan Dees - jdees@calpoly.edu
 ## Paul Motter - pmotter@calpoly.edu
 ## Connor Villanueva - ckvillan@calpoly.edu
