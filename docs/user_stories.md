@@ -14,15 +14,16 @@
 12. As someone who loves interacting with friends, I like to give feedback to my friend's opinions on movies, books, and video games. (needs a good SO...)
 
 ## Possible Exceptions
-1. 1
-2. 2
-3. 3
-4. 4
-5. 5
-6. 6
-7. 7
-8. 8
-9. 9
-10. 10
-11. 11
-12. 12
+1. If a user logs in with an incorrect username or password, then an error message will be shown.
+2. If a user tries to create a catalog but can’t, then give them a specific error for why. This could be duplicate name or invalid catalog type
+3. If a user tries to create an entry with a duplicate title, then have them re-enter a different title.
+4. if a user tries to delete an entry that doesn’t exist, then let them know nothing was found and nothing was deleted.
+5. if a user deletes an entry by accident, then always give them a confirmation to delete W/ entry description.
+6. if a user searches for a user or catalog with an incorrect name, then give them an error specifying to check spelling.
+7. if a user tries to remove a friend, then give an error specific to having no friends to remove or incorrect spelling.
+8. If a user searches for a catalog or an entry but it is private, then a match will be made but don’t display anything or display that the entry or catalog is private.
+9. If a user logs in but doesn’t have an account, then ask if they would like to create an account with the name and password provided also prompt a display name.
+10. If a user does any search and there are no matches, then give feedback that there are no matches.
+11. If a user enters a name in any field with forbidden characters, then handle the exception and prompt for a different name without forbidden characters. (may not be necessary depending on how we store/use titles other fields)
+12. If a user tries to go back through the menu system too far then give an exception stating that they can’t go back further.
+
