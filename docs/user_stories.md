@@ -11,7 +11,7 @@
 9. As a rare coin collector, I want to see the collections of others, so I can plan trades and see their opinions on coins.
 10. As a collector of figurines, I would like to see other people’s collections and compare them to my own. That way I can view what they have and what I have to discuss trades.
 11. As somebody who has been deceived by online reviews for movies, books, and games, I would like to see the opinions of people I trust, so I can make decisions on what to watch, read, or play.
-12. As someone who loves interacting with friends, I like to give feedback to my friend's opinions on movies, books, and video games, so I influcence with my own opinions
+12. As someone who loves interacting with friends, I like to give feedback to my friend's opinions on movies, books, and video games, so I influcence with my own opinions.
 
 ## Possible Exceptions
 1. If a user logs in with an incorrect username or password, then an error message will be shown.
