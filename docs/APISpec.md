@@ -9,8 +9,8 @@
 - POST /user/logout
 
 # NAVIGATION
-- Locations
-- - Self/follows -> catalog -> entries 
+  - Locations
+  - Self/follows -> catalog -> entries 
 
 - POST /location/back
 - GET /location/current
