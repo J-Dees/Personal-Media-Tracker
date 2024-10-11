@@ -35,6 +35,16 @@ Logs out the current user. Re-restricts access to private records and write acce
 }
 ```
 
+# User creating and Deteling
+
+### `user/{user_id}/delete` (DELETE)
+
+Delete user_id's account and all information related to it. Give confirmation warning.
+
+### `user/create` (POST)
+
+Create a new user account with the specified name and password. gicve
+
 # NAVIGATION
   - Locations
   - Self/follows -> catalog -> entries 
