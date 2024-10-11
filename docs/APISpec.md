@@ -18,21 +18,35 @@ Pass in a name and password to log that user in. Unrestricts read access to priv
 }
 ```
 
+**Response**
+```json
+{
+  "success": "boolean"
+}
+```
+
 ### `/user/logout` (POST)
 Logs out the current user. Re-restricts access to private records and write accesss. Gives an error if no-one is logged in.
+
+**Response**
+```json
+{
+"success": "boolean"
+}
+```
 
 # NAVIGATION
   - Locations
   - Self/follows -> catalog -> entries 
   - {userName} -> {catalogName} -> {entryTitle}
 
-##'/location/back' (POST)
-## '/location/current' (GET)
-## '/location/listpossibiities' (GET)
-## '/location/listpossibilities/condition' (GET)
-## '/location/next' (POST)
-## '/location/create' (POST)
-## '/location/delete' (POST)
+### `/location/back` (POST)
+### `/location/current` (GET)
+### `/location/listpossibiities` (GET)
+### `/location/listpossibilities/condition` (GET)
+### `/location/next` (POST)
+### `/location/create` (POST)
+### `/location/delete` (POST)
 
 # FOLLOWING
 ## '/social/follow' (POST)
