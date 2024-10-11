@@ -6,11 +6,8 @@
 
 # LOGGING IN/OUT
 ### `/user/login` (POST) (pass username and password)
-
-Pass in a name and password to log that user in. Unrestricts read access to private records on that user's account and enables write access.
-
+Pass in a name and password to log that user in. Unrestricts read access to private records on that user's account and enables write access. Gives an error if a user is already logged in.
 **Request**:
-
 ```json
 {
   "name": "String"
@@ -18,18 +15,8 @@ Pass in a name and password to log that user in. Unrestricts read access to priv
 }
 ```
 
-[
-    {
-        "sku": "string", /* Matching regex ^[a-zA-Z0-9_]{1,20}$ */
-        "name": "string",
-        "quantity": "integer", /* Between 1 and 10000 */
-        "price": "integer", /* Between 1 and 500 */
-        "potion_type": [r, g, b, d] /* r, g, b, d are integers that add up to exactly 100 */
-    }
-]
-
-## '/user/logout' (POST)
-
+### `/user/logout` (POST)
+Logs out the current user. Re-restricts access to private records and write accesss. Gives an error if no-one is logged in.
 
 # NAVIGATION
   - Locations
