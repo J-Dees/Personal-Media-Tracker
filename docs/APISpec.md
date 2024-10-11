@@ -4,19 +4,29 @@
 - liking and disliking.
 - creating users.
 
-# LOGGING IN/OUt
-## '/user/login' (POST) (pass username and password)
+# LOGGING IN/OUT
+### `/user/login` (POST) (pass username and password)
 
 Pass in a name and password to log that user in. Unrestricts read access to private records on that user's account and enables write access.
 
 **Request**:
 
-'''json
+```json
 {
   "name": "String"
   "password": "String"
 }
-'''
+```
+
+[
+    {
+        "sku": "string", /* Matching regex ^[a-zA-Z0-9_]{1,20}$ */
+        "name": "string",
+        "quantity": "integer", /* Between 1 and 10000 */
+        "price": "integer", /* Between 1 and 500 */
+        "potion_type": [r, g, b, d] /* r, g, b, d are integers that add up to exactly 100 */
+    }
+]
 
 ## '/user/logout' (POST)
 
