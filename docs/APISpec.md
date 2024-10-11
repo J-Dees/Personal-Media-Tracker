@@ -9,7 +9,7 @@
 
 Pass in a name and password to log that user in. Unrestricts read access to private records on that user's account and enables write access.
 
-**Request**
+**Request**:
 
 '''json
 {
