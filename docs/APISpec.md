@@ -5,23 +5,37 @@
 - creating users.
 
 # LOGGING IN/OUt
-- POST /user/login (pass username and password)
-- POST /user/logout
+## '/user/login' (POST) (pass username and password)
+Pass in a name and password to log that user in. Unrestricts read access to private records on that user's account and enables write access.
+**Request**
+'''json
+{
+  "name": "String"
+  "password": "String"
+}
+'''
+
+## '/user/logout' (POST)
+
 
 # NAVIGATION
   - Locations
   - Self/follows -> catalog -> entries 
+  - {userName} -> {catalogName} -> {entryTitle}
 
-- POST /location/back
-- GET /location/current
-- GET /location/listpossibiities
-- Get /location/listpossibilities/condition
-- POST /location/next
-- POST /location/create
-- POST /location/delete
+##'/location/back' (POST)
+## '/location/current' (GET)
+## '/location/listpossibiities' (GET)
+## '/location/listpossibilities/condition' (GET)
+## '/location/next' (POST)
+## '/location/create' (POST)
+## '/location/delete' (POST)
 
 # FOLLOWING
-- POST /social/manage/follow
-- GET /social/manage/following
-- POST /socail/manage/unfollow
-- GET /social/manage/list_people
+## '/social/follow' (POST)
+## '/social/following (GET)
+## '/social/unfollow' (POST)
+## '/social/list_people' (GET)
+
+## '/social/search/{user}/{catalog}/recommendations' (GET)
+## '/social/search/{title} (GET)
