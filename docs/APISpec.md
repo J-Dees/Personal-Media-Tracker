@@ -6,8 +6,11 @@
 
 # LOGGING IN/OUT
 ### `/user/login` (POST) (pass username and password)
+
 Pass in a name and password to log that user in. Unrestricts read access to private records on that user's account and enables write access. Gives an error if a user is already logged in.
+
 **Request**:
+
 ```json
 {
   "name": "String"
