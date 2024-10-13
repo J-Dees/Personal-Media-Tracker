@@ -5,16 +5,16 @@
 - creating users.
 
 # LOGGING IN/OUT
-### `/user/login` (POST) (pass username and password)
+### `/user/login` (GET)
 
-Pass in a name and password to log that user in. Unrestricts read access to private records on that user's account and enables write access. Gives an error if a user is already logged in.
+Pass in a username and responds with the user_id. When making calls with a user_id it unrestricts all private catalogs and entries. Also allows for appending and deleting catalogs and entries. 
 
 **Request**:
 
 ```json
 {
   "name": "String"
-}u
+}
 ```
 
 **Response**
@@ -24,10 +24,9 @@ Pass in a name and password to log that user in. Unrestricts read access to priv
 }
 ```
 
+#NO NEED FOR LOGOUT:
 ### `/user/{user_id}/logout` (POST)
-
 Logs out the current user. Re-restricts access to private records and write accesss. Gives an error if no-one is logged in.
-
 **Response**
 ```json
 {
