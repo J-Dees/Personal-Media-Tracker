@@ -1,48 +1,36 @@
 # API Specificatoin
 
 ## Table of contents
+
 ### User Functions
 - `/user/login` (GET)
-- `user/{user_id}/delete` (DELETE)
+- `user/{user_id}` (DELETE)
 - `user/create` (POST)
-- `user/{user_id}/catalogs/{catalog_name}/entries/` (GET) 
 
 ### Entries
 - `user/{user_id}/catalogs/{catalog_name}/entries` (POST)
-- `user/{user_id}/catalog/{catalog_name}/entries/?page=<token>` (GET) 
+- `user/{user_id}/catalogs/{catalog_name}/entries/search` (GET)
+- `user/{user_id}/catalog/{catalog_name}/entries/{entry_title}` (PUT)
+- `user/{user_id}/catalogs/{catalog_name}/entries/{entry_title}` (DELETE)
 
 ### Catalogs
-- `user/{user_id}/catalog` (POST) 
-- `user/{user_id}/catalog` (GET) 
-- `user/{user_id}/catalog` (GET) 
-- `user/{user_id}/catalog/{catalog_name}` (DELETE) 
-
-- `/{user_id}/{catalogName}/?page=<token>` (GET)
-- `/{user_id}/catalog/listpossibiities` (GET)
-- `/{user_id}/location/listpossibilities/condition` (GET)
-- `/{user_id}/location/next` (POST)
-- `/{user_id}/location` (POST)
-- `/{user_id}/location/{location_id}` (DELETE)
+- `user/{user_id}/catalog` (POST) creating catalog
+- `user/{user_id}/catalog/search` (GET) searching
+- `user/{user_id}/catalog/{catalog_name}` (DELETE) delete catalog
+- `user/{user_id}/catalog/{catalog_name}` (PUT)
 
 ### Following
-- `user/{user_id}/social` (POST) 
-- `user/{user_id}/social` (GET) 
-- `user/{user_id}/social/{user_id}` (DELETE)
-
-- `user/{user_id}/social/{user_id}` (GET) 
-
-- `user/{user_id}/social/`
-- `user/{user_id}/social/` (GET)
-
-- `/{user_id}/social/{user_name}/search/{catalog}/recommendations` (GET)
-- `/{user_id}/social/search/{title}` (GET)
-
-
+- `user/{user_id}/social` (POST) follow a user.
+- `user/{user_id}/social/search` (GET) get list of following
+- `user/{user_id}/social/{follower_id}` (DELETE) delete a follow
+- `user/{user_id}/social/{follower_id}/catalogs` (GET) return all catalogs
+- `user/{user_id}/social/{follower_id}/catalogs/{catalog}/recommendations` (GET) list all recommendations from a catalog.
+- `user/{user_id}/social/search/{title}` (GET) get all followers' entries with that title.
 
 # User Functions
 ### `/user/login` (GET)
 
-Pass in a username and responds with the user_id. When making calls with a user_id it unrestricts all private catalogs and entries. Also allows for appending and deleting catalogs and entries. 
+Pass in a username and responds with the user_id. When making calls with a user_id it un-restricts all private catalogs and entries. Also allows for appending and deleting catalogs and entries.
 
 **Request**:
 
@@ -59,21 +47,9 @@ Pass in a username and responds with the user_id. When making calls with a user_
 }
 ```
 
-#NO NEED FOR LOGOUT:
-### `/user/{user_id}/logout` (POST)
-Logs out the current user. Re-restricts access to private records and write accesss. Gives an error if no-one is logged in.
-**Response**
-```json
-{
-"success": "boolean"
-}
-```
-
-# Creating and Deteling Users
-
 ### `user/{user_id}/delete` (DELETE)
 
-Delete user_id's account and all information related to it. Give confirmation warning.
+Delete user_id's account and all information related to it. Gives a confirmation or warning.
 
 **Response**
 
@@ -114,13 +90,14 @@ Creates an entry for user_id in catalog_name. The request body has all the field
 
 ```json
 {
-  "title":"string",
-  "opinion":"string",
-  "rating/10":"float",
-  "watch_again":"boolean",
-  "date_seen":"String", user enters date in the formate yyyy-mm-dd
-  "private":"boolean"
-  "creation_date": "now()" use the current date
+  "title" : "string",
+  "opinion" : "string",
+  "rating/10" : "float",
+  "watch_again" : "boolean",
+  "date_seen" : “String", user enters date in the formate yyyy-mm-dd
+  “recommend” : “boolean”,
+  "private" : “boolean",
+  "last_modified": "now()" // use the current date
 }
 ```
 
@@ -132,9 +109,26 @@ Creates an entry for user_id in catalog_name. The request body has all the field
 }
 ```
 
-### `user/{user_id}/catalogs/{catalog_name}/entries/` (GET) list entries
+###`user/{user_id}/catalogs/{catalog_name}/entries/{entry_title}` (PUT)
 
-Gets a list of both public and private entries in catalog_name under user_id. The list will have 50 entries per page. Search is sorted based on the querty parameter.
+Updates a specific catalog entry with any of the fields (optional) that are to be updated. The last modified attribute will be updated to the current time for each usage of the PUT request.
+
+```json
+{
+  "title" : "string",
+  "opinion" : "string",
+  "rating/10" : "float",
+  "watch_again" : "boolean",
+  "date_seen" : “String", user enters date in the formate yyyy-mm-dd
+  “recommend” : “boolean”,
+  "private" : “boolean",
+  "last_modified": "now()" // use the current date
+}
+```
+
+### `user/{user_id}/catalogs/{catalog_name}/entries/search` (GET)
+
+Gets a list of both public and private entries in catalog_name under user_id. The list will have 50 entries per page. Search is sorted based on the query parameter.
 
 ***Query Parameters***
 
@@ -153,43 +147,183 @@ JSON object of the following:
 - `results`: Array of objects either movies, books, games, or default.
    - attributes of the objects.
 
-###`user/{user_id}/catalog/{catalog_name}/entries/?page=<token>` (GET) 
+###`user/{user_id}/catalog/{catalog_name}/entries/?page=<token>` (GET)
 
-Gets the next page of results.
+Get the next page of results.
 
-#CAN`user/{user_id}/catalogs/{catalog_name}/entries/` (GET) do this?
-### `user/{user_id}/catalog/{catalog_name}/entries/search?select="name"` (GET) search with column "name"
+### `user/{user_id}/catalogs/{catalog_name}/entries/{entry_title}` (DELETE) 
 
-### `user/{user_id}/catalogs/{catalog_name}/entries/{entry_title}` (DELETE) delete entry
+Deletes the entry under user_id in catalog_name with entry_title.
 
-Create an entry in catalog_name
-**json**
+***Response***
 
-##Catalogs
+```json
+{
+  “confirmation”: “string”
+}
+```
 
-### `user/{user_id}/catalog` (POST) create catalog
-### `user/{user_id}/catalog` (GET) list catalogs.
-### `user/{user_id}/catalog` (GET) next page of results.
-### `user/{user_id}/catalog/{catalog_name}` (DELETE) delete catalog
+## Catalogs
+
+### `user/{user_id}/catalogs/` (POST)
+
+Creates a catalog for user_id. The request body has all the fields to be filled in for the catalog.
+
+***Request***
+
+```json
+{
+  "title" : "string",
+  "type" : "string"
+}
+```
+
+***Response***
+
+```json
+{
+  "status":"string"
+}
+```
+
+### `user/{user_id}/catalog/search` (GET)
+
+Searches through a user’s catalogs using (optional) specified queries.
+
+Parameters:
+`title`: The title of a specific catalog
+`type`: The type of catalog 
+`page`: A specific page of catalogs in the query
+`sort-col`: A column to sort the results by (either `title` or `type`)
+`sort-order`: The order in which to display the results (`asc` or `desc`, default: `desc`)
+
+Response:
+
+A JSON response is produced with the following information:
+`results`: An array of JSON objects representing the catalogs returned by the query
+The catalogs will be listed by `title` and `type`
+`previous`: The results contained in the previous page of catalogs, will return an empty array if no such page exists
+`next`: The results contained in the next page of catalogs, will return an empty array if no such page exists
+
+### `user/{user_id}/catalog/{catalog_name}` (DELETE)
+
+Deletes the specified catalog `{catalog_name}` from a user’s lists of catalogs.
+
+Response:
+
+```json
+{
+	“status”: “string”
+}
+```
+
+###  `user/{user_id}/catalog/{catalog_name}` (PUT)
+
+Used to update the catalog_name
+
+***Request***
+
+```json
+{
+  “new_name”: “string”
+}
+```
+
+***Response***
+```json
+{
+  “confirmation”:”string”
+}
+
+# Following
+
+### `user/{user_id}/social` (POST) 
+
+follow a user
+
+***Request***
+
+```json
+{
+ “follower_id”: “string”
+}
+```
+
+***Response***
+
+```json
+{
+  “success”: “string”
+}
+```
+
+### `user/{user_id}/social/search` (GET) 
+Gets a list of all users user_id is following. The list will have 50 entries per page.
+
+***Query Parameters***
+
+- `search_page` (optional): The page number of the result.
+- `sort_col` (default) is to sort by name alphabetically.
+
+***Response***
+
+JSON object of the following:
+
+- `previous`: String
+- `next`: String
+- `results`: Array of names.
+   - name strings.
+
+### `user/{user_id}/social/{follower_id}` (DELETE) 
+
+delete a follow from user_id
+
+***Request***
+
+```json
+{
+  “follower_id”: “string”
+}
+```
+
+***Response***
+
+```json
+{
+  “success”:”boolean”
+}
+```
 
 
-### `/{user_id}/{catalogName}/?page=<token>` (GET)
-### `/{user_id}/catalog/listpossibiities` (GET)
-### `/{user_id}/location/listpossibilities/condition` (GET)
-### `/{user_id}/location/next` (POST)
-### `/{user_id}/location` (POST)
-### `/{user_id}/location/{location_id}` (DELETE)
+### `user/{user_id}/social/{follower_id}/catalogs` (GET)
 
-# FOLLOWING
-### `user/{user_id}/social` (POST) Follow a new person.
-### `user/{user_id}/social` (GET) List who the user follows.
-### `user/{user_id}/social/{user_id}` (DELETE) remove a follow 
+returns all catalogs
 
-### `user/{user_id}/social/{user_id} (GET) List the 
+***Response***
 
+```json
+{
+  “catalogs”: []
+}
+```
 
-### `user/{user_id}/social/`
-### `user/{user_id}/social/` (GET)
+### `user/{user_id}/social/{follower_id}/catalogs/{catalog}/recommendations` (GET)
 
-### `/{user_id}/social/{user_name}/search/{catalog}/recommendations` (GET)
+returns all entries in a catalog where recommend is true
+
+***Response***
+
+```json
+{
+  “Entry”: []
+}
+```
+
 ### `/{user_id}/social/search/{title}` (GET)
+
+***Response***
+```json
+{
+  “title” : [ ]
+}
+```
