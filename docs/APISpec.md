@@ -5,12 +5,11 @@
 - `/user/login` (GET)
 - `user/{user_id}/delete` (DELETE)
 - `user/create` (POST)
-- `user/{user_id}/catalogs/{catalog_name}/entries/` (GET)
-- `user/{user_id}/catalog/{catalog_name}/entries/?page=<token>` (GET) 
+- `user/{user_id}/catalogs/{catalog_name}/entries/` (GET) 
 
 ### Entries
 - `user/{user_id}/catalogs/{catalog_name}/entries` (POST)
-- 
+- `user/{user_id}/catalog/{catalog_name}/entries/?page=<token>` (GET) 
 
 ### Catalogs
 - `user/{user_id}/catalog` (POST) 
