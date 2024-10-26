@@ -12,3 +12,7 @@ app.include_router(catalogs.router)
 app.include_router(entries.router)
 app.include_router(following.router)
 app.include_router(user_functions.router)
+
+@app.get("/")
+async def root():
+    return {"message": "Welcome to our Personal Media Tracker"}

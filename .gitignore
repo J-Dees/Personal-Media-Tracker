@@ -1,2 +1,5 @@
+.vercel
 .venv
+.idea
+__pycahce__/
 .env
