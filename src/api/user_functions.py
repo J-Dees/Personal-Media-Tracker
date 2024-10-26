@@ -27,7 +27,7 @@ def login_user(name):
 @router.delete("user/{user_id}", status_code=204)
 def delete_user(user_id):
     with db.engine.begin() as connection:
-        user_id = connection.execute(sqlalchemy.text("""DELETE FROM users
-                                                        WHERE id = :user_id"""), {'user_id': user_id})
+        connection.execute(sqlalchemy.text("""DELETE FROM users
+                                              WHERE id = :user_id"""), {'user_id': user_id})
     # TEST LATER to make sure it cascades
     return "OK"
