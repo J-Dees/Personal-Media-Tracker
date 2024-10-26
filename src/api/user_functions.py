@@ -7,22 +7,27 @@ router = APIRouter(
     tags=["user functions"],
 )
 
-@router.post("user/create")
+@router.post("user/create", status_code=201)
 def create_new_user(name):
     with db.engine.begin() as connection:
-        user_id = connection.execute(sqlalchemy.text("""INSERT INTO users
-                                                    VALUES (:name)
-                                                    RETURNING id"""), {'name': name}).scalar_one()
+        connection.execute(sqlalchemy.text("""INSERT INTO users (name)
+                                              VALUES (:name)"""), {'name': name})
+    return "OK"
+
+@router.get("user/login")
+def login_user(name):
+    with db.engine.begin() as connection:
+        user_id = connection.execute(sqlalchemy.text("""SELECT id
+                                                        FROM users
+                                                        WHERE name = :name"""), {'name' : name}).scalar_one()
     return {
             "user_id": user_id
             }
 
-@router.get("user/login")
-def login_user():
-    # verify that the username exists and return a successful login message, allow access to catalogs for that user
-    return "OK"
-
-@router.delete("user/{user_id}")
-def delete_user():
-    # remove user with passed id from user table
+@router.delete("user/{user_id}", status_code=204)
+def delete_user(user_id):
+    with db.engine.begin() as connection:
+        user_id = connection.execute(sqlalchemy.text("""DELETE FROM users
+                                                        WHERE id = :user_id"""), {'user_id': user_id})
+    # TEST LATER to make sure it cascades
     return "OK"
