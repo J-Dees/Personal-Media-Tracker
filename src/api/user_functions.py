@@ -1,4 +1,6 @@
 from fastapi import APIRouter
+import sqlalchemy
+from src import database as db
 
 router = APIRouter(
     prefix="/user_functions",
@@ -6,10 +8,14 @@ router = APIRouter(
 )
 
 @router.post("user/create")
-def create_new_user():
-    # INSERT user into user list with unique name, returning the id generated for that user
-    # we should probably also login the user after they create an account for simplicity
-    return "OK"
+def create_new_user(name):
+    with db.engine.begin() as connection:
+        user_id = connection.execute(sqlalchemy.text("""INSERT INTO users
+                                                    VALUES (:name)
+                                                    RETURNING id"""), {'name': name}).scalar_one()
+    return {
+            "user_id": user_id
+            }
 
 @router.get("user/login")
 def login_user():
