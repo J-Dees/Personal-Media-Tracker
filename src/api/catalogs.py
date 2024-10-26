@@ -8,16 +8,22 @@ router = APIRouter(
 
 @router.post("user/{user_id}/catalogs")
 def create_catalog():
+    # insert into catalog table a new row with unqiue catalog id
+    # do we want this to have a composite key for userid and catalog id (ie user 1 catalog 1, user 2 catalog 1 etc)
+    # I think we should, this will make follower catalog lookup easier when a user does social interactions
     return "OK"
 
-@router.get("user/{user_id}/catalog/search")
+@router.get("user/{user_id}/catalogs/search")
 def search_catalogs():
+    # SELECT from catalog table with requested queries
     return "OK"
 
-@router.post("user/{user_id}/catalogs")
-def create_catalog():
+@router.delete("user/{user_id}/catalogs")
+def delete_catalog():
+    # DELETE FROM catalog where catalog id = id passed by user
     return "OK"
 
-@router.post("user/{user_id}/catalogs")
-def create_catalog():
+@router.put("user/{user_id}/catalogs")
+def update_catalog():
+    # update name/type of catalog with catalog id passed by user
     return "OK"
