@@ -20,27 +20,39 @@ def create_catalog(user_id: int, entry: catalog_create, response: Response):
     entry_dict = entry.dict()
     entry_dict.update({"user_id": user_id})
     with db.engine.begin() as connection:
-        try:
-           connection.execute(sqlalchemy.text("""
-                                              INSERT INTO catalogs (user_id, name, type, private) 
-                                              VALUES (:user_id, :name, :type, :private)"""), entry_dict)
-           response.status_code = status.HTTP_403_FORBIDDEN
-           return "OK"
-        except:
+        exists = connection.execute(sqlalchemy.text("""
+                                              SELECT id 
+                                              FROM catalogs 
+                                              WHERE user_id = :user_id 
+                                              AND name = :name"""), 
+                                              {
+                                                  "user_id": user_id,
+                                                  "name": entry.name
+                                              }).scalar_one_or_none()
+        if exists is None:
+            connection.execute(sqlalchemy.text("""
+                                               INSERT INTO catalogs (user_id, name, type, private) 
+                                               VALUES (:user_id, :name, :type, :private)"""), entry_dict)
+            response.status_code = status.HTTP_201_CREATED
+            return "OK"
+        else:    
             response.status_code = status.HTTP_403_FORBIDDEN
-            return 
+            return "Catalog name already taken. Please choose another name."
     
 
 @router.get("/{user_id}/catalogs/search")
-def search_catalogs(user_id: int):
+def search_catalogs(user_id: int, response: Response):
     # SELECT all catalogs from the user.
     with db.engine.begin() as connection:
         catalog_entries = connection.execute(sqlalchemy.text("""
                                            SELECT id, name, type, private 
                                            FROM catalogs
                                            WHERE user_id = :user_id"""), {"user_id": user_id}).mappings().fetchall()
-
-    return catalog_entries
+    if len(catalog_entries) > 0:
+        return catalog_entries
+    else:
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return "No catalogs found."
 
 @router.delete("/{user_id}/catalogs")
 def delete_catalog(user_id: int, catalog_id: int):
