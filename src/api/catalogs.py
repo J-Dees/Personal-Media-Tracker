@@ -1,10 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Response, status
 import sqlalchemy
 from pydantic import BaseModel
 from src import database as db
 
 router = APIRouter(
-    prefix="/catalogs",
+    prefix="/user",
     tags=["catalogs"],
 )
 
@@ -13,19 +13,25 @@ class catalog_create(BaseModel):
     type: str
     private: bool
 
-@router.post("user/{user_id}/catalogs")
-def create_catalog(user_id: int, entry: catalog_create):
+@router.post("/{user_id}/catalogs")
+def create_catalog(user_id: int, entry: catalog_create, response: Response):
     # insert into the users catalogs a new catalog with a unqiue catalog id
 
     entry_dict = entry.dict()
     entry_dict.update({"user_id": user_id})
     with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text("""
-                                           INSERT INTO catalogs (user_id, name, type, private) 
-                                           VALUES (:user_id, :name, :type, :private)"""), entry_dict)
-    return "OK"
+        try:
+           connection.execute(sqlalchemy.text("""
+                                              INSERT INTO catalogs (user_id, name, type, private) 
+                                              VALUES (:user_id, :name, :type, :private)"""), entry_dict)
+           response.status_code = status.HTTP_403_FORBIDDEN
+           return "OK"
+        except:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return 
+    
 
-@router.get("user/{user_id}/catalogs/search")
+@router.get("/{user_id}/catalogs/search")
 def search_catalogs(user_id: int):
     # SELECT all catalogs from the user.
     with db.engine.begin() as connection:
@@ -36,7 +42,7 @@ def search_catalogs(user_id: int):
 
     return catalog_entries
 
-@router.delete("user/{user_id}/catalogs")
+@router.delete("/{user_id}/catalogs")
 def delete_catalog(user_id: int, catalog_id: int):
     # DELETE FROM catalog where catalog id = id passed by user
 
@@ -56,7 +62,7 @@ class catalog_update(BaseModel):
     name: str
     private: bool
 
-@router.put("user/{user_id}/catalogs")
+@router.put("/{user_id}/catalogs")
 def update_catalog(user_id: int, catalog_id: int, catalog_update: catalog_update):
     # update name/type of catalog with catalog id passed by user
     
