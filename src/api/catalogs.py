@@ -60,9 +60,14 @@ class catalog_update(BaseModel):
 def update_catalog(user_id: int, catalog_id: int, catalog_update: catalog_update):
     # update name/type of catalog with catalog id passed by user
     
+    catalog_update_dict =  catalog_update.dict()
+    catalog_update_dict.update({"user_id": user_id,
+                                "id": catalog_id})
     with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text("""UPDATE catalogs
+            connection.execute(sqlalchemy.text("""UPDATE catalogs
                                            SET name = :name,
-                                           private = :private"""), catalog_update.dict())
+                                               private = :private
+                                           WHERE user_id = :user_id 
+                                           AND id = :id"""), catalog_update_dict)
     
     return "OK"
