@@ -5,7 +5,7 @@ from src import database as db
 
 
 router = APIRouter(
-    prefix="/entries",
+    prefix="/user",
     tags=["entries"],
 )
 
@@ -18,7 +18,7 @@ class game_entries(BaseModel):
     recommend: bool
     private: bool
 
-@router.post("user/{user_id}/catalogs/{catalog_name}/game_entries")
+@router.post("/{user_id}/catalogs/{catalog_name}/game_entries")
 def create_game_entry(user_id: int, catalog_id: str, entry: game_entries):
     '''
     1.  Identify type of entry from catalog type
@@ -73,7 +73,7 @@ def create_game_entry(user_id: int, catalog_id: str, entry: game_entries):
     return "OK"
 
         
-@router.get("user/{user_id}/catalogs/{catalog_name}/entries/search")
+@router.get("/{user_id}/catalogs/{catalog_name}/entries/search")
 def entry_search():
     # find a specific entry in the current catalog with the given query
     return "OK"
@@ -82,7 +82,7 @@ class update_game_entries(BaseModel):
     rating: float
     hours_played: float
     play_again: bool
-@router.put("user/{user_id}/catalogs/{catalog_name}/entries/{entry_title}")
+@router.put("/{user_id}/catalogs/{catalog_name}/entries/{entry_title}")
 def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: update_game_entries):
     # update any value of the specified entry
 
@@ -107,7 +107,7 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
 
     return "OK"
 
-@router.delete("user/{user_id}/catalogs/{catalog_name}/game_entries/{entry_title}")
+@router.delete("/{user_id}/catalogs/{catalog_name}/game_entries/{entry_title}")
 def delete_entry():
     # DELETE FROM entries specified title
     return "OK"
