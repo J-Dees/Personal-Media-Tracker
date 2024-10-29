@@ -1,8 +1,8 @@
 # Example workflow
 3. Connor hears about a new personal media tracker and wants to use it to keep track of the video games he has played.
    He creates an account by calling `POST /user/create`. Connor logs in calling `GET /user/login`. After that, he creates a
-   catalog for his games by calling `POST user/{user_id}/catalog` and passing in the title “my_games” and the catalog type of “Game”. He then creates
-   an entry using `POST user/{user_id}/catalogs/{catalog_name}/entries`. He creates an entry for “Omori” with a rating of 8/10, he played for 200 hours.
+   catalog for his games by calling `POST user/{user_id}/catalog` and passing in the title “my_games” and the catalog type of “games”. He then creates
+   an entry using `POST user/{user_id}/catalogs/{catalog_name}/game_entries`. He creates an entry for “Omori” with a rating of 8/10, he played for 200 hours.
    After creating the entry, he thinks to himself that “Omori” is actually the greatest psychological horror game and wants
    to change his rating. He calls `PUT /user/{user_id}/catalogs/{catalog_name}/entries/{entry_title}` and passes a new rating of 10/10.
 
