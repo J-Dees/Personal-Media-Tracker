@@ -45,7 +45,7 @@ def reset_db():
         connection.execute(sqlalchemy.text("SELECT create_database()"))
         connection.execute(sqlalchemy.text("INSERT INTO books (id, book_title, author) VALUES (:id, :book_title, :author)"), books)
         connection.execute(sqlalchemy.text("INSERT INTO movies (id, movie_title, year) VALUES (:id, :movie_title, :year)"), movies)
-        connection.execute(sqlalchemy.text("INSERT INTO games (id, game_title, author) VALUES (:id, :game_title, :year)"), games)
+        connection.execute(sqlalchemy.text("INSERT INTO games (id, game_title, year) VALUES (:id, :game_title, :year)"), games)
         print("Reset finished.")
     
     return 'OK'
