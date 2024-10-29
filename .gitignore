@@ -1,6 +1,6 @@
 .vercel
 .venv
 .idea
-__pycahce__/
+__pycache__/
 .env
 .vscode
