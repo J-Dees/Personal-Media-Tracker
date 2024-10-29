@@ -13,6 +13,7 @@ def parse_csv(file_name: str) -> []:
     header = file.readline().rsplit()
     for line in file:
         line_parts = line.strip("\"").split(",")
+        print(line_parts)
         append_dict.append(
             {
                 f"{header[0]}": int(line_parts[0]),
@@ -27,9 +28,9 @@ def reset_db():
     with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("SELECT delete_database()"))
         connection.execute(sqlalchemy.text("SELECT create_database()"))
-        connection.execute(sqlalchemy.text("INSERT INTO books (id, book_title, author) VALUES (:id, :book_title, :author)"), parse_csv("books_data.csv"))
-        connection.execute(sqlalchemy.text("INSERT INTO movies (id, movie_title, year) VALUES (:id, :movie_title, :year)"), parse_csv("movies_data.csv"))
-        connection.execute(sqlalchemy.text("INSERT INTO books (id, game_title, author) VALUES (:id, :game_title, :year)"), parse_csv("games_data.csv"))
+        connection.execute(sqlalchemy.text("INSERT INTO books (id, book_title, author) VALUES (:id, :book_title, :author)"), parse_csv("Personal-Media-Tracker/books_data.csv"))
+        connection.execute(sqlalchemy.text("INSERT INTO movies (id, movie_title, year) VALUES (:id, :movie_title, :year)"), parse_csv("Personal-Media-Tracker/movies_data.csv"))
+        connection.execute(sqlalchemy.text("INSERT INTO books (id, game_title, author) VALUES (:id, :game_title, :year)"), parse_csv("Personal-Media-Tracker/games_data.csv"))
         
 
 @router.post("/load")
