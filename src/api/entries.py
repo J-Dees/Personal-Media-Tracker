@@ -19,7 +19,7 @@ class game_entries(BaseModel):
     private: bool
 
 @router.post("/{user_id}/catalogs/{catalog_name}/game_entries")
-def create_game_entry(user_id: int, catalog_id: str, entry: game_entries):
+def create_game_entry(user_id: int, catalog_name: str, entry: game_entries):
     '''
     1.  Identify type of entry from catalog type
     2.  Look up id from game/book/movie
@@ -32,6 +32,8 @@ def create_game_entry(user_id: int, catalog_id: str, entry: game_entries):
     # Later: check if catalog belongs to user, duplicates
 
     with db.engine.begin() as connection:
+        catalog_id = connection.execute(sqlalchemy.text(
+            "SELECT id from catalogs where user_id = :user_id and name = :catalog_name"), {"user_id": user_id, "catalog_name": catalog_name}).scalar_one()
         entry_id = connection.execute(sqlalchemy.text(
             """
                 INSERT INTO entries
