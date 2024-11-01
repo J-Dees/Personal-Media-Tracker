@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 import sqlalchemy
 from src import database as db
+from datetime import date
 
 
 router = APIRouter(
@@ -13,8 +14,8 @@ class movie_entries(BaseModel):
     title: str
     opinion: str
     rating: float
-    hours_played: float
-    play_again: bool
+    date_seen: date
+    watch_again: bool
     recommend: bool
     private: bool
 
@@ -46,8 +47,44 @@ def create_game_entry(user_id: int, catalog_name: str, entry: movie_entries):
     # insert into catalog table a new row with unqiue catalog id
     # do we want this to have a composite key for userid, catalog id, and entry id (ie user 1 catalog 1 entry 1, user 2 catalog 1 entry 1 etc)
 
-    # Later: check if catalog belongs to user, duplicates
+    try:
+        if (not catalog_belongs_to_user(user_id, catalog_name)):
+            raise Exception("Catalog does not belong to user.")
 
+        if (entry_exists(user_id, catalog_name, entry.title)):
+            raise Exception("Entry already exists.")
+
+        with db.engine.begin() as connection:
+            entry_id = connection.execute(sqlalchemy.text(
+                """
+                INSERT INTO
+                    entries (catalog_id, private, recommend)
+                    (SELECT catalogs.id, :private, :recommend FROM catalogs WHERE name = :catalog_name)
+                RETURNING id
+                """
+            ), {"private": entry.private, "recommend": entry.recommend, "catalog_name": catalog_name}).one()
+
+            connection.execute(sqlalchemy.text(
+                """
+                INSERT INTO
+                    movie_entry (entry_id, movie_id, date_seen, opinion, rating, watch_again)
+                    (
+                        SELECT :entry_id, movies.id, :date_seen, :opinion, :rating, :watch_again
+                        FROM movies
+                        WHERE movie_title = :movie_title
+                    )
+                """
+            ), {
+                "entry_id": entry_id.id,
+                "date_seen": entry.date_seen,
+                "opinion": entry.opinion,
+                "rating": entry.rating,
+                "watch_again": entry.watch_again,
+                "movie_title": entry.title
+            })
+    
+    except Exception as e:
+        print("Error:",e)
 
     return "OK"
 
@@ -60,19 +97,77 @@ def entry_search():
 class update_movie_entries(BaseModel):
     opinion: str
     rating: float
-    hours_played: float
-    play_again: bool
+    date_seen: date
+    watch_again: bool
 
 
 @router.put("/{user_id}/catalogs/{catalog_name}/movie_entries/{entry_title}")
 def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: update_movie_entries):
     # update any value of the specified entry
 
-    # Later, verify catalog belongs to user
+    try:
+        if (not catalog_belongs_to_user(user_id, catalog_name)):
+            raise Exception("Catalog does not belong to user.")
+
+        if (not entry_exists(user_id, catalog_name, entry_title)):
+            raise Exception("Entry does not exist.")
+
+        with db.engine.begin() as connection:
+            parameters = entry.dict()
+            parameters.update({"entry_title": entry_title})
+
+            connection.execute(sqlalchemy.text(
+                """
+                UPDATE
+                    movie_entry
+                SET
+                    date_seen = :date_seen,
+                    opinion = :opinion,
+                    rating = :rating,
+                    watch_again = :watch_again
+                WHERE entry_id =
+                    (
+                    SELECT entry_id
+                    FROM entries
+                    JOIN movie_entry ON movie_entry.entry_id = entries.id
+                    JOIN movies ON movies.id = movie_entry.movie_id
+                    WHERE movie_title = :entry_title
+                    )
+                """
+            ), parameters)
+    
+    except Exception as e:
+        print("Error:", e)
 
     return "OK"
 
 @router.delete("/{user_id}/catalogs/{catalog_name}/movie_entries/{entry_title}")
-def delete_entry():
+def delete_entry(user_id: int, catalog_name: str, entry_title: str):
     # DELETE FROM entries specified title
+
+    try:
+        if (not catalog_belongs_to_user(user_id, catalog_name)):
+            raise Exception("Catalog does not belong to user.")
+        
+        if (not entry_exists(user_id, catalog_name, entry_title)):
+            raise Exception("Entry does not exist.")
+        
+        with db.engine.begin() as connection:
+            connection.execute(sqlalchemy.text(
+                """
+                DELETE FROM
+                    entries
+                WHERE id = 
+                    (
+                    SELECT entry_id
+                    FROM entries
+                    JOIN movie_entry ON movie_entry.entry_id = entries.id
+                    JOIN movies on movies.id = movie_entry.movie_id
+                    WHERE movie_title = :entry_title
+                    )
+                """
+            ), {"entry_title": entry_title})
+    except Exception as e:
+        print("Error:", e)
+
     return "OK"

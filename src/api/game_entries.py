@@ -54,7 +54,7 @@ def create_game_entry(user_id: int, catalog_name: str, entry: game_entries):
         
         # Check if entry already exists
         if (entry_exists(user_id, catalog_name, entry.title)):
-            raise Exception("Trying to create duplicate entry.")
+            raise Exception("Entry already exists.")
 
         with db.engine.begin() as connection:
             entry_id = connection.execute(sqlalchemy.text(
@@ -74,9 +74,7 @@ def create_game_entry(user_id: int, catalog_name: str, entry: game_entries):
                     (
                         SELECT :entry_id, games.id, :hours_played, :opinion, :rating, :play_again
                         FROM games
-                        WHERE game_title = :game_title AND NOT EXISTS (
-                            SELECT 1 FROM game_entry
-                            WHERE game_entry.game_id = games.id)
+                        WHERE game_title = :game_title
                     )
                 """
             ), {
