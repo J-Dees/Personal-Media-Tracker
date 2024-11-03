@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from src.api import game_entries, movie_entries, book_entries, other_entries
-from src.api import catalogs, entries, following, user_functions, admin, data_sets
+from src.api import catalogs, following, user_functions, admin, data_sets
 
 description = """ Track your stuff ! """
 
