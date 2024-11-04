@@ -188,7 +188,7 @@ def get_recommended(user_id: int, following_name: str, catalog: str):
                     FROM catalogs
                     JOIN users ON users.id = catalogs.user_id
                     JOIN entries ON entries.catalog_id = catalogs.id
-                    JOIN movies_entry on movies_entry.entry_id = entries.id
+                    JOIN movie_entry on movie_entry.entry_id = entries.id
                     """
                 )).mappings().fetchall()
             case 'books':
@@ -198,7 +198,7 @@ def get_recommended(user_id: int, following_name: str, catalog: str):
                     FROM catalogs
                     JOIN users ON users.id = catalogs.user_id
                     JOIN entries ON entries.catalog_id = catalogs.id
-                    JOIN books_entry on books_entry.entry_id = entries.id
+                    JOIN book_entry on book_entry.entry_id = entries.id
                     """
                 )).mappings().fetchall()
             case 'other':
