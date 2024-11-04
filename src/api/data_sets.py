@@ -97,7 +97,6 @@ def search_movies(page: int = 1, movie_title: str = "", year: int = None, sort_c
     )
 
     if year != None: #only searach by year if one is given.
-        print(f"year: {year}")
         stats_statement = stats_statement.where(movies.c.year == year)
         content_statement = content_statement.where(movies.c.year == year)
 
@@ -144,7 +143,6 @@ def search_games(page: int = 1, game_title: str = "", year: int = None, sort_col
     )
 
     if year != None: #only searach by year if one is given.
-        print(f"year: {year}")
         stats_statement = stats_statement.where(games.c.year == year)
         content_statement = content_statement.where(games.c.year == year)
 
