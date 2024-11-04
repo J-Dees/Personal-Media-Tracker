@@ -113,4 +113,21 @@
 ]
       "GET /user/8/social/Aiden/catalogs HTTP/1.1" 200 OK`
 
-## finish with recommended catalogs ##
+### GET user/{user_id}/social/{user_name}/catalogs/{catalog}/recommendations:
+#### CURL CALL:
+       ```curl -X 'GET' \
+  'http://127.0.0.1:8000/user/11/social/Aiden/catalogs/my_movies/recommendations' \
+  -H 'accept: application/json'```
+#### CURL RESPONSE:
+      `Response Body: [
+  {
+    "movie_title": "Cars",
+    "year": 2006,
+    "date_seen": "2014-10-07",
+    "opinion": "Lightning McQueen is cool",
+    "rating": 9.3,
+    "watch_again": true,
+    "recommend": true
+  }
+]
+      "GET /user/11/social/Aiden/catalogs/my_movies/recommendations HTTP/1.1" 200 OK
