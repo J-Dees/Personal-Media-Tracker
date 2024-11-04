@@ -8,7 +8,7 @@ router = APIRouter(
 )
 
 @router.post("/{user_id}/social")
-def follower_user(user_id: int, user_name: str):
+def follow_user(user_id: int, user_name: str):
     """ user_id will follow a user with user_name """
     with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text(
@@ -52,7 +52,7 @@ def get_followers(user_id: int):
     return followers
 
 @router.delete("/{user_id}/social/{following_id}")
-def unfollow(user_id: int, following_name: str):
+def unfollow_user(user_id: int, following_name: str):
     """ user_id unfollows following_name """
     with db.engine.begin() as connection:
         try:
@@ -174,41 +174,70 @@ def get_recommended(user_id: int, following_name: str, catalog: str):
             case 'games':
                 recommended_entries = connection.execute(sqlalchemy.text(
                     """
-                    SELECT *
+                    SELECT
+                        games.game_title,
+                        games.year,
+                        game_entry.entry_id,
+                        game_entry.hours_played,
+                        game_entry.opinion,
+                        game_entry.rating,
+                        game_entry.recommend
                     FROM catalogs
                     JOIN users ON users.id = catalogs.user_id
                     JOIN entries ON entries.catalog_id = catalogs.id
-                    JOIN game_entry on game_entry.entry_id = entries.id
+                    JOIN game_entry ON game_entry.entry_id = entries.id
+                    JOIN games ON games.id = game_entry.game_id
                     """
                 )).mappings().fetchall()
             case 'movies':
                 recommended_entries = connection.execute(sqlalchemy.text(
                     """
-                    SELECT *
+                    SELECT 
+                        movies.movie_title,
+                        movies.year,
+                        movie_entry.date_seen, 
+                        movie_entry.opinion, 
+                        movie_entry.rating, 
+                        movie_entry.watch_again,
+                        entries.recommend
                     FROM catalogs
                     JOIN users ON users.id = catalogs.user_id
                     JOIN entries ON entries.catalog_id = catalogs.id
-                    JOIN movie_entry on movie_entry.entry_id = entries.id
+                    JOIN movie_entry ON movie_entry.entry_id = entries.id
+                    JOIN movies ON movies.id = movie_entry.movie_id
                     """
                 )).mappings().fetchall()
             case 'books':
                 recommended_entries = connection.execute(sqlalchemy.text(
                     """
-                    SELECT *
+                    SELECT
+                        books.book_title,
+                        books.author,
+                        book_entry.date_read,
+                        book_entry.opinion,
+                        book_entry.rating,
+                        book_entry.read_again
+                        entries.recommend
                     FROM catalogs
                     JOIN users ON users.id = catalogs.user_id
                     JOIN entries ON entries.catalog_id = catalogs.id
-                    JOIN book_entry on book_entry.entry_id = entries.id
+                    JOIN book_entry ON book_entry.entry_id = entries.id
+                    JOIN books ON books.id = book_entry.book_id
                     """
                 )).mappings().fetchall()
             case 'other':
                 recommended_entries = connection.execute(sqlalchemy.text(
                     """
-                    SELECT *
+                    SELECT
+                        other_entry.title,
+                        other_entry.description,
+                        other_entry.price,
+                        other_entry.quality,
+                        entries.recommend
                     FROM catalogs
                     JOIN users ON users.id = catalogs.user_id
                     JOIN entries ON entries.catalog_id = catalogs.id
-                    JOIN other_entry on other_entry.entry_id = entries.id
+                    JOIN other_entry ON other_entry.entry_id = entries.id
                     """
                 )).mappings().fetchall()
 
