@@ -11,6 +11,7 @@ router = APIRouter(
 
 class game_entries(BaseModel):
     title: str
+    year: int
     opinion: str
     rating: float
     hours_played: float
@@ -61,11 +62,11 @@ def create_game_entry(user_id: int, catalog_name: str, entry: game_entries):
                 """
                 INSERT INTO
                     entries (catalog_id, private, recommend)
-                    (SELECT catalogs.id, :private, :recommend FROM catalogs WHERE name = :catalog_name)
+                    (SELECT catalogs.id, :private, :recommend FROM catalogs WHERE name = :catalog_name AND user_id = :user_id)
                 RETURNING id
 
                 """
-            ), {"catalog_name": catalog_name, "private": entry.private, "recommend": entry.recommend}).one()
+            ), {"catalog_name": catalog_name, "private": entry.private, "recommend": entry.recommend, "user_id": user_id}).one()
 
             connection.execute(sqlalchemy.text(
                 """
@@ -75,6 +76,7 @@ def create_game_entry(user_id: int, catalog_name: str, entry: game_entries):
                         SELECT :entry_id, games.id, :hours_played, :opinion, :rating, :play_again
                         FROM games
                         WHERE game_title = :game_title
+                        AND year = :year
                     )
                 """
             ), {
@@ -83,7 +85,8 @@ def create_game_entry(user_id: int, catalog_name: str, entry: game_entries):
                 "opinion": entry.opinion,
                 "rating": entry.rating,
                 "play_again": entry.play_again,
-                "game_title": entry.title
+                "game_title": entry.title,
+                "year": entry.year
             })
 
     except Exception as e:

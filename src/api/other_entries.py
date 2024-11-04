@@ -60,13 +60,14 @@ def create_other_entry(user_id: int, catalog_name: str, entry: other_entries):
                 """
                 INSERT INTO
                     entries (catalog_id, private, recommend)
-                    (SELECT catalogs.id, :private, :recommend FROM catalogs WHERE name = :catalog_name)
+                    (SELECT catalogs.id, :private, :recommend FROM catalogs WHERE name = :catalog_name AND user_id = :user_id)
                 RETURNING id
                 """
             ), {
                 "private": entry.private,
                 "recommend": entry.recommend,
-                "catalog_name": catalog_name
+                "catalog_name": catalog_name,
+                "user_id": user_id
             }).one()
 
             connection.execute(sqlalchemy.text(

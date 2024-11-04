@@ -12,6 +12,7 @@ router = APIRouter(
 
 class movie_entries(BaseModel):
     title: str
+    year: int
     opinion: str
     rating: float
     date_seen: date
@@ -40,7 +41,7 @@ def entry_exists(user_id: int, catalog_name: str, entry_title: str) -> bool:
     return result.verified
 
 @router.post("/{user_id}/catalogs/{catalog_name}/movie_entries")
-def create_game_entry(user_id: int, catalog_name: str, entry: movie_entries):
+def create_movie_entry(user_id: int, catalog_name: str, entry: movie_entries):
     '''
 
     '''
@@ -59,10 +60,10 @@ def create_game_entry(user_id: int, catalog_name: str, entry: movie_entries):
                 """
                 INSERT INTO
                     entries (catalog_id, private, recommend)
-                    (SELECT catalogs.id, :private, :recommend FROM catalogs WHERE name = :catalog_name)
+                    (SELECT catalogs.id, :private, :recommend FROM catalogs WHERE name = :catalog_name AND user_id = :user_id)
                 RETURNING id
                 """
-            ), {"private": entry.private, "recommend": entry.recommend, "catalog_name": catalog_name}).one()
+            ), {"private": entry.private, "recommend": entry.recommend, "catalog_name": catalog_name, "user_id": user_id}).one()
 
             connection.execute(sqlalchemy.text(
                 """
@@ -72,6 +73,7 @@ def create_game_entry(user_id: int, catalog_name: str, entry: movie_entries):
                         SELECT :entry_id, movies.id, :date_seen, :opinion, :rating, :watch_again
                         FROM movies
                         WHERE movie_title = :movie_title
+                        AND year = :year
                     )
                 """
             ), {
@@ -80,7 +82,8 @@ def create_game_entry(user_id: int, catalog_name: str, entry: movie_entries):
                 "opinion": entry.opinion,
                 "rating": entry.rating,
                 "watch_again": entry.watch_again,
-                "movie_title": entry.title
+                "movie_title": entry.title,
+                "year": entry.year
             })
     
     except Exception as e:

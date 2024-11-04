@@ -12,6 +12,7 @@ router = APIRouter(
 
 class book_entries(BaseModel):
     title: str
+    author: str
     opinion: str
     rating: float
     date_read: date
@@ -59,10 +60,10 @@ def create_entry(user_id: int, catalog_name: str, entry: book_entries):
                 """
                 INSERT INTO
                     entries (catalog_id, private, recommend)
-                    (SELECT catalogs.id, :private, :recommend FROM catalogs WHERE name = :catalog_name)
+                    (SELECT catalogs.id, :private, :recommend FROM catalogs WHERE name = :catalog_name AND user_id = :user_id)
                 RETURNING id
                 """
-            ), {"private": entry.private, "recommend": entry.recommend, "catalog_name": catalog_name}).one()
+            ), {"private": entry.private, "recommend": entry.recommend, "catalog_name": catalog_name, "user_id": user_id}).one()
 
             connection.execute(sqlalchemy.text(
                 """
@@ -72,6 +73,7 @@ def create_entry(user_id: int, catalog_name: str, entry: book_entries):
                         SELECT :entry_id, books.id, :date_read, :opinion, :rating, :read_again
                         FROM books
                         WHERE book_title = :book_title
+                        AND author = :author
                     )
                 """
             ), {
@@ -80,7 +82,8 @@ def create_entry(user_id: int, catalog_name: str, entry: book_entries):
                 "opinion": entry.opinion,
                 "rating": entry.rating,
                 "read_again": entry.read_again,
-                "book_title": entry.title
+                "book_title": entry.title,
+                "author": entry.author
             })
     
     except Exception as e:
