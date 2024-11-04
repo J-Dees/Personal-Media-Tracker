@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Response, status
 from pydantic import BaseModel
 import sqlalchemy
 from src import database as db
@@ -40,8 +40,17 @@ def entry_exists(user_id: int, catalog_name: str, entry_title: str) -> bool:
         ), {"catalog_name": catalog_name, "user_id": user_id, "entry_title": entry_title}).first()
     return result.verified
 
+def movie_doesnt_exist(title: str, year: int) -> bool:
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text(
+            """
+            SELECT check_movie_exists(:title, :year) as verified
+            """
+        ), {"title": title, "year": year}).first()
+    return result.verified
+
 @router.post("/{user_id}/catalogs/{catalog_name}/movie_entries")
-def create_movie_entry(user_id: int, catalog_name: str, entry: movie_entries):
+def create_movie_entry(user_id: int, catalog_name: str, entry: movie_entries, response: Response):
     '''
 
     '''
@@ -54,6 +63,9 @@ def create_movie_entry(user_id: int, catalog_name: str, entry: movie_entries):
 
         if (entry_exists(user_id, catalog_name, entry.title)):
             raise Exception("Entry already exists.")
+        
+        if (movie_doesnt_exist(entry.title, entry.year)):
+            raise Exception("No movie matches that title and year.")
 
         with db.engine.begin() as connection:
             entry_id = connection.execute(sqlalchemy.text(
@@ -87,7 +99,8 @@ def create_movie_entry(user_id: int, catalog_name: str, entry: movie_entries):
             })
     
     except Exception as e:
-        print("Error:",e)
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return str(e)
 
     return "OK"
 

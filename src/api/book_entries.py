@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Response, status
 from pydantic import BaseModel
 import sqlalchemy
 from src import database as db
@@ -40,8 +40,17 @@ def entry_exists(user_id: int, catalog_name: str, entry_title: str) -> bool:
         ), {"catalog_name": catalog_name, "user_id": user_id, "entry_title": entry_title}).first()
     return result.verified
 
+def book_doesnt_exist(title: str, author: str) -> bool:
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text(
+            """
+            SELECT check_book_exists(:title, :author) as verified
+            """
+        ), {"title": title, "author": author}).first()
+    return result.verified
+
 @router.post("/{user_id}/catalogs/{catalog_name}/book_entries")
-def create_entry(user_id: int, catalog_name: str, entry: book_entries):
+def create_entry(user_id: int, catalog_name: str, entry: book_entries, response: Response):
     '''
 
     '''
@@ -54,7 +63,10 @@ def create_entry(user_id: int, catalog_name: str, entry: book_entries):
 
         if (entry_exists(user_id, catalog_name, entry.title)):
             raise Exception("Entry already exists.")
-
+        
+        if (book_doesnt_exist(entry.title, entry.author)):
+            raise Exception("No Book matches that title and author.")
+        
         with db.engine.begin() as connection:
             entry_id = connection.execute(sqlalchemy.text(
                 """
@@ -87,7 +99,8 @@ def create_entry(user_id: int, catalog_name: str, entry: book_entries):
             })
     
     except Exception as e:
-        print("Error:",e)
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return str(e)
 
     return "OK"
 
