@@ -1,4 +1,4 @@
-# Example workflow
+# Example workflow 3
 3. Connor hears about a new personal media tracker and wants to use it to keep track of the video games he has played.
    He creates an account by calling `POST /user/create`. Connor logs in calling `GET /user/login`. After that, he creates a
    catalog for his games by calling `POST user/{user_id}/catalog` and passing in the title “my_games” and the catalog type of “games”. He then creates
