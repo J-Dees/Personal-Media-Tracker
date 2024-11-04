@@ -4,9 +4,9 @@
 # Testing results
 ### GET /user/login:
 #### CURL CALL:
-       ```curl -X 'GET' \
+       `curl -X 'GET' \
   'http://127.0.0.1:8000/user/login?name=Paul' \
-  -H 'accept: application/json'```
+  -H 'accept: application/json'`
 #### CURL RESPONSE:
       `Response Body: "OK"
       "GET /user/login?name=Paul HTTP/1.1" 200 OK`
@@ -81,29 +81,29 @@
 # Testing results
 ### POST /user/create:
 #### CURL CALL:
-       ```curl -X 'POST' \
+       `curl -X 'POST' \
   'http://127.0.0.1:8000/user/create?name=Jonathan' \
   -H 'accept: application/json' \
-  -d ''```
+  -d ''`
 #### CURL RESPONSE:
       `Response Body: "OK"
       "POST /user/create?name=Jonathan HTTP/1.1" 201 Created`
 
 ### POST  user/{user_id}/social:
 #### CURL CALL:
-       ```curl -X 'POST' \
+       `curl -X 'POST' \
   'http://127.0.0.1:8000/user/8/social?user_name=Aiden' \
   -H 'accept: application/json' \
-  -d ''```
+  -d ''`
 #### CURL RESPONSE:
       `Response Body: "OK"
       "POST /user/8/social?user_name=Aiden HTTP/1.1" OK`
 
 ### GET user/{user_id}/social/{follower_id}/catalogs:
 #### CURL CALL:
-       ```curl -X 'GET' \
+       `curl -X 'GET' \
   'http://127.0.0.1:8000/user/8/social/Aiden/catalogs' \
-  -H 'accept: application/json'```
+  -H 'accept: application/json'`
 #### CURL RESPONSE:
       `Response Body: [
   {
@@ -115,9 +115,9 @@
 
 ### GET user/{user_id}/social/{user_name}/catalogs/{catalog}/recommendations:
 #### CURL CALL:
-       ```curl -X 'GET' \
+       `curl -X 'GET' \
   'http://127.0.0.1:8000/user/11/social/Aiden/catalogs/my_movies/recommendations' \
-  -H 'accept: application/json'```
+  -H 'accept: application/json'`
 #### CURL RESPONSE:
       `Response Body: [
   {
@@ -130,4 +130,4 @@
     "recommend": true
   }
 ]
-      "GET /user/11/social/Aiden/catalogs/my_movies/recommendations HTTP/1.1" 200 OK
+      "GET /user/11/social/Aiden/catalogs/my_movies/recommendations HTTP/1.1" 200 OK`
