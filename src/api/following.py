@@ -8,39 +8,39 @@ router = APIRouter(
 )
 
 @router.post("/{user_id}/social")
-def add_follower(user_id: int, user_name: str):
-    """ follow a user """
+def follower_user(user_id: int, user_name: str):
+    """ user_id will follow a user with user_name """
     with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text(
             """
-            INSERT INTO social (user_id, follower_id)
+            INSERT INTO social (user_id, following_id)
             VALUES(
+                :user_id,
                 (
                     SELECT id
                     FROM users
                     WHERE users.name = :user_name
-                ),
-                :user_id
+                )
             )
             """
         ),
             {
-                'user_name': user_name,
-                'user_id': user_id
+                'user_id': user_id,
+                'user_name': user_name
             }
         )
     return "OK"
 
 @router.get("/{user_id}/social/search")
-def search_follower(user_id: int):
-    """ searches through a user's followers based on query """
+def get_followers(user_id: int):
+    """ gets user_id's followers """
     with db.engine.begin() as connection:
         followers = connection.execute(sqlalchemy.text(
             """
             SELECT users.name
             FROM social
-            JOIN users ON users.id = social.follower_id
-            WHERE social.user_id = :user_id
+            JOIN users ON users.id = social.user_id
+            WHERE social.following_id = :user_id
             ORDER BY users.name ASC
             """
         ),
@@ -51,35 +51,35 @@ def search_follower(user_id: int):
 
     return followers
 
-@router.delete("/{user_id}/social/{follower_id}")
-def remove_follower(user_id: int, follower_name: str):
-    """ DELETE FROM social the user_id/follower_id pair """
+@router.delete("/{user_id}/social/{following_id}")
+def unfollow(user_id: int, following_name: str):
+    """ user_id unfollows following_name """
     with db.engine.begin() as connection:
         try:
             result = connection.execute(sqlalchemy.text(
                 """
                 DELETE FROM social
-                WHERE follower_id = (
-                    SELECT follower_id
+                WHERE following_id = (
+                    SELECT following_id
                     FROM users
-                    WHERE users.name = :follower_name
+                    WHERE users.name = :following_name
                     )
                     and social.user_id = :user_id;
 
-                SELECT user_id, follower_id
+                SELECT user_id, following_id
                 FROM social
                 WHERE user_id = :user_id
-                AND follower_id = (
-                    SELECT follower_id
+                AND following_id = (
+                    SELECT following_id
                     FROM users
-                    WHERE users.name = :follower_name
+                    WHERE users.name = :following_name
                 )
                 """
             ),
                 {
-                    'follower_name': follower_name,
+                    'following_name': following_name,
                     'user_id': user_id,
-                    'follower_name': follower_name,
+                    'following_name': following_name,
                     'user_id': user_id
                 }
             ).first()
@@ -93,27 +93,27 @@ def remove_follower(user_id: int, follower_name: str):
         return True
 
 @router.get("/{user_id}/social/{follower_name}/catalogs")
-def view_follower_catalogs(user_id:int , follower_name: str):
-    """ view a specified follower's catalogs """
+def view_following_catalogs(user_id:int , following_name: str):
+    """ view catalogs of a user that you are following """
 
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text(
             """
-            SELECT user_id, follower_id
+            SELECT user_id, following_id
             FROM social
-            JOIN users ON users.id = social.follower_id
-            WHERE users.name = :follower_name
+            JOIN users ON users.id = social.following_id
+            WHERE users.name = :following_name
             AND user_id = :user_id
             """
         ), 
             {
-                'follower_name': follower_name,
+                'following_name': following_name,
                 'user_id': user_id
             }
         ).first()
 
     if result == None:
-        print(f"User is not following {follower_name}")
+        print(f"User is not following {following_name}")
         return []
 
     with db.engine.begin() as connection:
@@ -122,40 +122,40 @@ def view_follower_catalogs(user_id:int , follower_name: str):
             SELECT catalogs.name, catalogs.type
             FROM catalogs
             JOIN users ON users.id = catalogs.user_id
-            WHERE users.name = :follower_name
+            WHERE users.name = :following_name
             AND catalogs.private = FALSE
             """
         ), 
             {
-                'follower_name': follower_name
+                'following_name': following_name
             }
         ).mappings().fetchall()
 
     return catalogs
 
-@router.get("/{user_id}/social/{follower_name}/catalogs/{catalog}/recommendations")
-def get_recommended(user_id: int, follower_name: str, catalog: str):
-    """ view all catalog entries that are flagged as recommended in a given follower catalog """
+@router.get("/{user_id}/social/{following_name}/catalogs/{catalog}/recommendations")
+def get_recommended(user_id: int, following_name: str, catalog: str):
+    """ view all catalog entries that are flagged as recommended in a given catalog of a user that you are following"""
     # this is probably something we can implement into a user's own catalogs as well
 
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text(
             """
-            SELECT user_id, follower_id
+            SELECT user_id, following_id
             FROM social
-            JOIN users ON users.id = social.follower_id
-            WHERE users.name = :follower_name
+            JOIN users ON users.id = social.following_id
+            WHERE users.name = :following_name
             AND user_id = :user_id
             """
         ), 
             {
-                'follower_name': follower_name,
+                'following_name': following_name,
                 'user_id': user_id
             }
         ).first()
 
     if result == None:
-        print(f"User is not following {follower_name}")
+        print(f"User is not following {following_name}")
         return []
 
     with db.engine.begin() as connection:
@@ -164,9 +164,9 @@ def get_recommended(user_id: int, follower_name: str, catalog: str):
             SELECT type
             FROM catalogs
             JOIN users ON users.id = catalogs.user_id
-            WHERE users.name = :follower_name
+            WHERE users.name = :following_name
             """
-        ),{'follower_name': follower_name}).scalar()
+        ),{'following_name': following_name}).scalar()
 
 
     with db.engine.begin() as connection:
