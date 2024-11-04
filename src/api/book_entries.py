@@ -64,7 +64,7 @@ def create_entry(user_id: int, catalog_name: str, entry: book_entries, response:
         if (entry_exists(user_id, catalog_name, entry.title)):
             raise Exception("Entry already exists.")
         
-        if (book_doesnt_exist(entry.title, entry.author)):
+        if (not book_doesnt_exist(entry.title, entry.author)):
             raise Exception("No Book matches that title and author.")
         
         with db.engine.begin() as connection:

@@ -64,7 +64,7 @@ def create_movie_entry(user_id: int, catalog_name: str, entry: movie_entries, re
         if (entry_exists(user_id, catalog_name, entry.title)):
             raise Exception("Entry already exists.")
         
-        if (movie_doesnt_exist(entry.title, entry.year)):
+        if (not movie_doesnt_exist(entry.title, entry.year)):
             raise Exception("No movie matches that title and year.")
 
         with db.engine.begin() as connection:

@@ -66,7 +66,7 @@ def create_game_entry(user_id: int, catalog_name: str, entry: game_entries, resp
         if (entry_exists(user_id, catalog_name, entry.title)):
             raise Exception("Entry already exists.")
         
-        if (game_doesnt_exist(entry.title, entry.year)):
+        if (not game_doesnt_exist(entry.title, entry.year)):
             raise Exception("No game matches that title and year.")
 
         with db.engine.begin() as connection:
