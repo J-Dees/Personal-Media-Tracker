@@ -19,6 +19,11 @@ class other_entries(BaseModel):
     recommend: bool
     private: bool
 
+@router.get("/{user_id}/catalogs/{catalog_name}/other_entries/search")
+def entry_search():
+    # find a specific entry in the current catalog with the given query
+    return "OK"
+
 def catalog_belongs_to_user(user_id: int, catalog_name: str) -> bool:
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text(
@@ -89,12 +94,6 @@ def create_other_entry(user_id: int, catalog_name: str, entry: other_entries):
     except Exception as e:
         print("Error:", e)
 
-    return "OK"
-
-        
-@router.get("/{user_id}/catalogs/{catalog_name}/other_entries/search")
-def entry_search():
-    # find a specific entry in the current catalog with the given query
     return "OK"
 
 class update_other_entries(BaseModel):

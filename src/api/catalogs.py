@@ -8,6 +8,20 @@ router = APIRouter(
     tags=["catalogs"],
 )
 
+@router.get("/{user_id}/catalogs/search")
+def search_catalogs(user_id: int, response: Response):
+    # SELECT all catalogs from the user.
+    with db.engine.begin() as connection:
+        catalog_entries = connection.execute(sqlalchemy.text("""
+                                           SELECT id, name, type, private 
+                                           FROM catalogs
+                                           WHERE user_id = :user_id"""), {"user_id": user_id}).mappings().fetchall()
+    if len(catalog_entries) > 0:
+        return catalog_entries
+    else:
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return "No catalogs found."
+
 class catalog_create(BaseModel):
     name: str
     type: str
@@ -38,37 +52,6 @@ def create_catalog(user_id: int, entry: catalog_create, response: Response):
         else:    
             response.status_code = status.HTTP_403_FORBIDDEN
             return "Catalog name already taken. Please choose another name."
-    
-
-@router.get("/{user_id}/catalogs/search")
-def search_catalogs(user_id: int, response: Response):
-    # SELECT all catalogs from the user.
-    with db.engine.begin() as connection:
-        catalog_entries = connection.execute(sqlalchemy.text("""
-                                           SELECT id, name, type, private 
-                                           FROM catalogs
-                                           WHERE user_id = :user_id"""), {"user_id": user_id}).mappings().fetchall()
-    if len(catalog_entries) > 0:
-        return catalog_entries
-    else:
-        response.status_code = status.HTTP_404_NOT_FOUND
-        return "No catalogs found."
-
-@router.delete("/{user_id}/catalogs")
-def delete_catalog(user_id: int, catalog_id: int):
-    # DELETE FROM catalog where catalog id = id passed by user
-
-    entry = {
-        "user_id": user_id,
-        "id": catalog_id
-    }
-    with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text(""" 
-                                           DELETE FROM catalogs 
-                                           WHERE user_id = :user_id AND id = :id"""), entry)
-    
-    return "OK"
-
 
 class catalog_update(BaseModel):
     name: str
@@ -87,5 +70,20 @@ def update_catalog(user_id: int, catalog_id: int, catalog_update: catalog_update
                                                private = :private
                                            WHERE user_id = :user_id 
                                            AND id = :id"""), catalog_update_dict)
+    
+    return "OK"
+
+@router.delete("/{user_id}/catalogs")
+def delete_catalog(user_id: int, catalog_id: int):
+    # DELETE FROM catalog where catalog id = id passed by user
+
+    entry = {
+        "user_id": user_id,
+        "id": catalog_id
+    }
+    with db.engine.begin() as connection:
+        connection.execute(sqlalchemy.text(""" 
+                                           DELETE FROM catalogs 
+                                           WHERE user_id = :user_id AND id = :id"""), entry)
     
     return "OK"

@@ -7,91 +7,6 @@ router = APIRouter(
     tags=["following"],
 )
 
-@router.post("/{user_id}/social")
-def follower_user(user_id: int, user_name: str):
-    """ user_id will follow a user with user_name """
-    with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text(
-            """
-            INSERT INTO social (user_id, following_id)
-            VALUES(
-                :user_id,
-                (
-                    SELECT id
-                    FROM users
-                    WHERE users.name = :user_name
-                )
-            )
-            """
-        ),
-            {
-                'user_id': user_id,
-                'user_name': user_name
-            }
-        )
-    return "OK"
-
-@router.get("/{user_id}/social/search")
-def get_followers(user_id: int):
-    """ gets user_id's followers """
-    with db.engine.begin() as connection:
-        followers = connection.execute(sqlalchemy.text(
-            """
-            SELECT users.name
-            FROM social
-            JOIN users ON users.id = social.user_id
-            WHERE social.following_id = :user_id
-            ORDER BY users.name ASC
-            """
-        ),
-            {
-                'user_id': user_id
-            }
-        ).mappings().fetchall()
-
-    return followers
-
-@router.delete("/{user_id}/social/{following_id}")
-def unfollow(user_id: int, following_name: str):
-    """ user_id unfollows following_name """
-    with db.engine.begin() as connection:
-        try:
-            result = connection.execute(sqlalchemy.text(
-                """
-                DELETE FROM social
-                WHERE following_id = (
-                    SELECT following_id
-                    FROM users
-                    WHERE users.name = :following_name
-                    )
-                    and social.user_id = :user_id;
-
-                SELECT user_id, following_id
-                FROM social
-                WHERE user_id = :user_id
-                AND following_id = (
-                    SELECT following_id
-                    FROM users
-                    WHERE users.name = :following_name
-                )
-                """
-            ),
-                {
-                    'following_name': following_name,
-                    'user_id': user_id,
-                    'following_name': following_name,
-                    'user_id': user_id
-                }
-            ).first()
-        except ():
-            return False
-
-    if result != None:
-        print("row not deleted")
-        return False
-    else:
-        return True
-
 @router.get("/{user_id}/social/{follower_name}/catalogs")
 def view_following_catalogs(user_id:int , following_name: str):
     """ view catalogs of a user that you are following """
@@ -218,3 +133,88 @@ def get_recommended(user_id: int, following_name: str, catalog: str):
 def search_catalogs():
     # searches (all ?) follower catalogs for a specified catalog title
     return "OK"
+
+@router.get("/{user_id}/social/search")
+def get_followers(user_id: int):
+    """ gets user_id's followers """
+    with db.engine.begin() as connection:
+        followers = connection.execute(sqlalchemy.text(
+            """
+            SELECT users.name
+            FROM social
+            JOIN users ON users.id = social.user_id
+            WHERE social.following_id = :user_id
+            ORDER BY users.name ASC
+            """
+        ),
+            {
+                'user_id': user_id
+            }
+        ).mappings().fetchall()
+
+    return followers
+
+@router.post("/{user_id}/social")
+def follower_user(user_id: int, user_name: str):
+    """ user_id will follow a user with user_name """
+    with db.engine.begin() as connection:
+        connection.execute(sqlalchemy.text(
+            """
+            INSERT INTO social (user_id, following_id)
+            VALUES(
+                :user_id,
+                (
+                    SELECT id
+                    FROM users
+                    WHERE users.name = :user_name
+                )
+            )
+            """
+        ),
+            {
+                'user_id': user_id,
+                'user_name': user_name
+            }
+        )
+    return "OK"
+
+@router.delete("/{user_id}/social/{following_id}")
+def unfollow(user_id: int, following_name: str):
+    """ user_id unfollows following_name """
+    with db.engine.begin() as connection:
+        try:
+            result = connection.execute(sqlalchemy.text(
+                """
+                DELETE FROM social
+                WHERE following_id = (
+                    SELECT following_id
+                    FROM users
+                    WHERE users.name = :following_name
+                    )
+                    and social.user_id = :user_id;
+
+                SELECT user_id, following_id
+                FROM social
+                WHERE user_id = :user_id
+                AND following_id = (
+                    SELECT following_id
+                    FROM users
+                    WHERE users.name = :following_name
+                )
+                """
+            ),
+                {
+                    'following_name': following_name,
+                    'user_id': user_id,
+                    'following_name': following_name,
+                    'user_id': user_id
+                }
+            ).first()
+        except ():
+            return False
+
+    if result != None:
+        print("row not deleted")
+        return False
+    else:
+        return True

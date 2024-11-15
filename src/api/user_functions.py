@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Response, status
+
 import sqlalchemy
 from src import database as db
 
 router = APIRouter(
-    prefix="/user",
+    prefix="/users",
     tags=["user functions"],
 )
 
@@ -20,6 +21,19 @@ def create_new_user(name, response: Response):
             response.status_code = status.HTTP_403_FORBIDDEN
             return "Username already taken, please choose a different name."
     
+# @router.get("/list")
+# def get_users(page: int = 1, name: str = ""):
+#     """Lists all users"""
+    
+#     with db.engine.begin() as connection:
+#         stats = connection.execute(sqlalchemy.text("""
+#             SELECT count(*)
+#             FROM users
+#             WHERE name ILIKE(:name)
+#             """), {"name": name}).scalar_one()
+#         content = connection.execute(sqlalchemy.text("""
+            
+#             """))
 
 @router.get("/login")
 def login_user(name, response: Response):

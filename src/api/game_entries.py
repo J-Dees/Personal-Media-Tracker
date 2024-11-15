@@ -19,6 +19,12 @@ class game_entries(BaseModel):
     recommend: bool
     private: bool
 
+        
+@router.get("/{user_id}/catalogs/{catalog_name}/entries/search")
+def entry_search():
+    # find a specific entry in the current catalog with the given query
+    return "OK"
+
 def catalog_belongs_to_user(user_id: int, catalog_name: str) -> bool:
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text(
@@ -105,12 +111,6 @@ def create_game_entry(user_id: int, catalog_name: str, entry: game_entries, resp
         response.status_code = status.HTTP_404_NOT_FOUND
         return str(e)
 
-    return "OK"
-
-        
-@router.get("/{user_id}/catalogs/{catalog_name}/entries/search")
-def entry_search():
-    # find a specific entry in the current catalog with the given query
     return "OK"
 
 class update_game_entries(BaseModel):

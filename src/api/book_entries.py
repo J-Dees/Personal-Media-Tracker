@@ -49,6 +49,11 @@ def book_doesnt_exist(title: str, author: str) -> bool:
         ), {"title": title, "author": author}).first()
     return result.verified
 
+@router.get("/{user_id}/catalogs/{catalog_name}/book_entries/search")
+def entry_search():
+    # find a specific entry in the current catalog with the given query
+    return "OK"
+
 @router.post("/{user_id}/catalogs/{catalog_name}/book_entries")
 def create_entry(user_id: int, catalog_name: str, entry: book_entries, response: Response):
     '''
@@ -102,12 +107,6 @@ def create_entry(user_id: int, catalog_name: str, entry: book_entries, response:
         response.status_code = status.HTTP_404_NOT_FOUND
         return str(e)
 
-    return "OK"
-
-        
-@router.get("/{user_id}/catalogs/{catalog_name}/book_entries/search")
-def entry_search():
-    # find a specific entry in the current catalog with the given query
     return "OK"
 
 class update_book_entries(BaseModel):
