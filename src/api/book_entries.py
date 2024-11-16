@@ -1,3 +1,4 @@
+from enum import Enum
 from fastapi import APIRouter, Response, status
 from pydantic import BaseModel
 import sqlalchemy
@@ -49,10 +50,61 @@ def book_doesnt_exist(title: str, author: str) -> bool:
         ), {"title": title, "author": author}).first()
     return result.verified
 
+class entries_order_by(str, Enum):
+    book_title = "book_title"
+    date_read = "date_read"
+    rating = "rating"
+class asc_desc(str, Enum):
+    asc = "asc"
+    desc = "desc"
+
 @router.get("/{user_id}/catalogs/{catalog_name}/book_entries/search")
-def entry_search():
+def entry_search(user_id: int, 
+                 catalog_name: str,
+                 page: int = 1, 
+                 opinion: str = "",
+                 order_by: entries_order_by = entries_order_by.book_title,
+                 direction: asc_desc = asc_desc.asc):
+    """Search a specific catalog's game_entries"""
     # find a specific entry in the current catalog with the given query
-    return "OK"
+    stats_statement = (
+        sqlalchemy.select(
+            sqlalchemy.func.count(db.entries.c.id).label("total_rows"))
+        .select_from(db.entries)
+        .join(db.catalogs, db.entries.c.catalog_id == db.catalogs.c.id)
+        .where(db.catalogs.c.user_id == user_id)
+        .where(db.catalogs.c.name == catalog_name)
+        .where(db.catalogs.c.type == "books")
+        .where(db.book_entry.c.opinion.ilike(f"%{opinion}%"))
+    )
+    #Statement for gathering the primary content returned.
+    content_statement = (
+        sqlalchemy.select(
+            db.books.c.book_title,
+            db.entries.c.private,
+            db.entries.c.recommend,
+            db.book_entry.c.rating,
+            db.book_entry.c.date_read,
+            db.book_entry.c.read_again,
+            db.book_entry.c.opinion)
+        .select_from(db.catalogs)
+        .join(db.entries, db.entries.c.catalog_id == db.catalogs.c.id)
+        .join(db.book_entry, db.book_entry.c.entry_id == db.entries.c.id)
+        .join(db.books, db.book_entry.c.book_id == db.books.c.id)
+        .where(db.catalogs.c.user_id == user_id)
+        .where(db.catalogs.c.name == catalog_name)
+        .where(db.catalogs.c.type == "books")
+        .where(db.book_entry.c.opinion.ilike(f"%{opinion}%"))
+        .limit(db.MAX_PER_PAGE).offset(db.MAX_PER_PAGE*(page-1))
+    )
+
+    #Append proper order_by to the query.
+    if (direction == "desc"):
+        content_statement = content_statement.order_by(sqlalchemy.desc(order_by))
+    else:
+        content_statement = content_statement.order_by(order_by)
+
+    return db.execute_search(stats_statement, content_statement, page)
 
 @router.post("/{user_id}/catalogs/{catalog_name}/book_entries")
 def create_entry(user_id: int, catalog_name: str, entry: book_entries, response: Response):

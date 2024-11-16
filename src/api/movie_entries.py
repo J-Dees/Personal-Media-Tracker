@@ -1,3 +1,4 @@
+from enum import Enum
 from fastapi import APIRouter, Response, status
 from pydantic import BaseModel
 import sqlalchemy
@@ -20,10 +21,61 @@ class movie_entries(BaseModel):
     recommend: bool
     private: bool
 
+class entries_order_by(str, Enum):
+    movie_title = "movie_title"
+    date_seen = "date_seen"
+    rating = "rating"
+class asc_desc(str, Enum):
+    asc = "asc"
+    desc = "desc"
+
 @router.get("/{user_id}/catalogs/{catalog_name}/movie_entries/search")
-def entry_search():
+def entry_search(user_id: int, 
+                 catalog_name: str,
+                 page: int = 1, 
+                 opinion: str = "",
+                 order_by: entries_order_by = entries_order_by.movie_title,
+                 direction: asc_desc = asc_desc.asc):
+    """Search a specific catalog's movie_entries"""
     # find a specific entry in the current catalog with the given query
-    return "OK"
+    stats_statement = (
+        sqlalchemy.select(
+            sqlalchemy.func.count(db.entries.c.id).label("total_rows"))
+        .select_from(db.entries)
+        .join(db.catalogs, db.entries.c.catalog_id == db.catalogs.c.id)
+        .where(db.catalogs.c.user_id == user_id)
+        .where(db.catalogs.c.name == catalog_name)
+        .where(db.catalogs.c.type == "movies")
+        .where(db.movie_entry.c.opinion.ilike(f"%{opinion}%"))
+    )
+    #Statement for gathering the primary content returned.
+    content_statement = (
+        sqlalchemy.select(
+            db.movies.c.movie_title,
+            db.entries.c.private,
+            db.entries.c.recommend,
+            db.movie_entry.c.rating,
+            db.movie_entry.c.date_seen,
+            db.movie_entry.c.watch_again,
+            db.movie_entry.c.opinion)
+        .select_from(db.catalogs)
+        .join(db.entries, db.entries.c.catalog_id == db.catalogs.c.id)
+        .join(db.movie_entry, db.movie_entry.c.entry_id == db.entries.c.id)
+        .join(db.movies, db.movie_entry.c.movie_id == db.movies.c.id)
+        .where(db.catalogs.c.user_id == user_id)
+        .where(db.catalogs.c.name == catalog_name)
+        .where(db.catalogs.c.type == "movies")
+        .where(db.movie_entry.c.opinion.ilike(f"%{opinion}%"))
+        .limit(db.MAX_PER_PAGE).offset(db.MAX_PER_PAGE*(page-1))
+    )
+
+    #Append proper order_by to the query.
+    if (direction == "desc"):
+        content_statement = content_statement.order_by(sqlalchemy.desc(order_by))
+    else:
+        content_statement = content_statement.order_by(order_by)
+
+    return db.execute_search(stats_statement, content_statement, page)
 
 def catalog_belongs_to_user(user_id: int, catalog_name: str) -> bool:
     with db.engine.begin() as connection:

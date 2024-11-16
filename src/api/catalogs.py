@@ -1,3 +1,4 @@
+from enum import Enum
 from fastapi import APIRouter, Response, status
 import sqlalchemy
 from pydantic import BaseModel
@@ -8,19 +9,54 @@ router = APIRouter(
     tags=["catalogs"],
 )
 
+class catalog_type(str, Enum):
+    any = ""
+    books = "books"
+    games = "games"
+    movies = "movies"
+    other = "other"
+class catalog_order_by(str, Enum):
+    created = "id"
+    name = "name"
+class asc_desc(str, Enum):
+    asc = "asc"
+    desc = "desc"
+
 @router.get("/{user_id}/catalogs/search")
-def search_catalogs(user_id: int, response: Response):
-    # SELECT all catalogs from the user.
-    with db.engine.begin() as connection:
-        catalog_entries = connection.execute(sqlalchemy.text("""
-                                           SELECT id, name, type, private 
-                                           FROM catalogs
-                                           WHERE user_id = :user_id"""), {"user_id": user_id}).mappings().fetchall()
-    if len(catalog_entries) > 0:
-        return catalog_entries
+def search_catalogs(response: Response, 
+                    user_id: int, 
+                    page: int = 1, 
+                    type: catalog_type = catalog_type.any, 
+                    order_by: catalog_order_by = catalog_order_by.name, 
+                    direction: asc_desc = asc_desc.asc):
+    '''Search A user's list of catalogs. Default will search the entire catalog ordered by name.'''
+    #Statement for gathering how many rows will be returned.
+    stats_statement = (
+        sqlalchemy.select(
+            sqlalchemy.func.count(db.catalogs.c.id).label("total_rows"))
+            .where(db.catalogs.c.user_id == user_id)
+    )
+    #Statement for gathering the primary content returned.
+    content_statement = (
+        sqlalchemy.select(
+            db.catalogs.c.name,
+            db.catalogs.c.type,
+            db.catalogs.c.private)
+        .where(db.catalogs.c.user_id == user_id)
+        .limit(db.MAX_PER_PAGE).offset(db.MAX_PER_PAGE*(page-1))
+    )
+
+    #Append proper order_by to the query.
+    if (direction == "desc"):
+        content_statement = content_statement.order_by(sqlalchemy.desc(order_by))
     else:
-        response.status_code = status.HTTP_404_NOT_FOUND
-        return "No catalogs found."
+        content_statement = content_statement.order_by(order_by)
+    #add where if searching for a specific catalog type.
+    if (type != catalog_type.any):
+        content_statement = content_statement.where(db.catalogs.c.type == type)
+        stats_statement = stats_statement.where(db.catalogs.c.type == type)
+    
+    return db.execute_search(stats_statement, content_statement, page)
 
 class catalog_create(BaseModel):
     name: str
