@@ -1,3 +1,4 @@
+from enum import Enum
 from fastapi import APIRouter, Response, status
 
 import sqlalchemy
@@ -24,19 +25,37 @@ def create_new_user(name, response: Response):
             response.status_code = status.HTTP_409_CONFLICT
             return "Username already taken, please choose a different name."
     
-# @router.get("/list")
-# def get_users(page: int = 1, name: str = ""):
-#     """Lists all users"""
-    
-#     with db.engine.begin() as connection:
-#         stats = connection.execute(sqlalchemy.text("""
-#             SELECT count(*)
-#             FROM users
-#             WHERE name ILIKE(:name)
-#             """), {"name": name}).scalar_one()
-#         content = connection.execute(sqlalchemy.text("""
-            
-#             """))
+class asc_desc(str, Enum):
+    asc = "asc"
+    desc = "desc"
+
+@router.get("/search_users")
+def get_users(page: int = 1, 
+              name: str = "",
+              direction: asc_desc = asc_desc.asc):
+    """Lists all users"""
+    stats_statement = (
+        sqlalchemy.select(
+            sqlalchemy.func.count(db.users.c.id).label("total_rows"))
+        .select_from(db.users)
+        .where(db.users.c.name.ilike(f"%{name}%"))
+    )
+    #Statement for gathering the primary content returned.
+    content_statement = (
+        sqlalchemy.select(
+            db.users.c.name)
+        .select_from(db.users)
+        .where(db.users.c.name.ilike(f"%{name}%"))
+        .limit(db.MAX_PER_PAGE).offset(db.MAX_PER_PAGE*(page-1))
+    )
+
+    #Append proper order_by to the query.
+    if (direction == "desc"):
+        content_statement = content_statement.order_by(sqlalchemy.desc(db.users.c.name))
+    else:
+        content_statement = content_statement.order_by(db.users.c.name)
+
+    return db.execute_search(stats_statement, content_statement, page)
 
 @router.get("")
 def login_user(name, response: Response):
