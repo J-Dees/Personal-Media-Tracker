@@ -21,7 +21,7 @@ def create_new_user(name, response: Response):
             response.status_code = status.HTTP_201_CREATED
             return "OK"
         except:
-            response.status_code = status.HTTP_403_FORBIDDEN
+            response.status_code = status.HTTP_409_CONFLICT
             return "Username already taken, please choose a different name."
     
 # @router.get("/list")

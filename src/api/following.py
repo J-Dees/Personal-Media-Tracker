@@ -1,75 +1,82 @@
 from enum import Enum
-from fastapi import APIRouter
+from fastapi import APIRouter, Response, status
 import sqlalchemy
 from src import database as db
 
 router = APIRouter(
-    prefix="/user",
+    prefix="/following",
     tags=["following"],
 )
 
-@router.get("/{user_id}/social/search")
-def get_followers(user_id: int):
-
-    """ gets user_id's followers """
+@router.get("/{user_id}")
+def get_following(user_id: int, response: Response):
+    """Return a list of all users that you are following"""
     with db.engine.begin() as connection:
-        followers = connection.execute(sqlalchemy.text(
+        following = connection.execute(sqlalchemy.text(
             """
-            SELECT users.name
-            FROM social
-            JOIN users ON users.id = social.user_id
-            WHERE social.following_id = :user_id
-            ORDER BY users.name ASC
+            SELECT name
+            FROM users
+            WHERE id IN (
+                SELECT following_id
+                FROM social
+                JOIN users ON users.id = social.user_id
+                WHERE social.user_id = :user_id
+                ORDER BY users.name ASC
+                )
             """
         ),
             {
                 'user_id': user_id
             }
         ).mappings().fetchall()
+    response.status_code = status.HTTP_200_OK
+    return following
 
-    return followers
 
 
-@router.get("/{user_id}/social/{follower_name}/catalogs")
-def view_following_catalogs(user_id:int , following_name: str):
-    """ view catalogs of a user that you are following """
+@router.get("/{user_id}/search_catalogs")
+def view_following_catalogs(user_id:int , following_name: str, response: Response):
+    """View all public catalogs of a specific user that you are following """
+    try: 
+        with db.engine.begin() as connection:
+            result = connection.execute(sqlalchemy.text(
+                """
+                SELECT user_id, following_id
+                FROM social
+                JOIN users ON users.id = social.following_id
+                WHERE users.name = :following_name
+                AND user_id = :user_id
+                """
+            ), 
+                {
+                    'following_name': following_name,
+                    'user_id': user_id
+                }
+            ).first()
 
-    with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(
-            """
-            SELECT user_id, following_id
-            FROM social
-            JOIN users ON users.id = social.following_id
-            WHERE users.name = :following_name
-            AND user_id = :user_id
-            """
-        ), 
-            {
-                'following_name': following_name,
-                'user_id': user_id
-            }
-        ).first()
+        if result == None:
+            print(f"User is not following {following_name}")
+            return []
 
-    if result == None:
-        print(f"User is not following {following_name}")
-        return []
-
-    with db.engine.begin() as connection:
-        catalogs = connection.execute(sqlalchemy.text(
-            """
-            SELECT catalogs.name, catalogs.type
-            FROM catalogs
-            JOIN users ON users.id = catalogs.user_id
-            WHERE users.name = :following_name
-            AND catalogs.private = FALSE
-            """
-        ), 
-            {
-                'following_name': following_name
-            }
-        ).mappings().fetchall()
-
-    return catalogs
+        with db.engine.begin() as connection:
+            catalogs = connection.execute(sqlalchemy.text(
+                """
+                SELECT catalogs.name, catalogs.type
+                FROM catalogs
+                JOIN users ON users.id = catalogs.user_id
+                WHERE users.name = :following_name
+                AND catalogs.private = FALSE
+                """
+            ), 
+                {
+                    'following_name': following_name
+                }
+            ).mappings().fetchall()
+        response.status_code = status.HTTP_200_OK
+        return catalogs
+    except:
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return "User by requested username not found in list of people you follow."
 
 class entry_type(str, Enum):
     games = "games"
@@ -84,7 +91,7 @@ class asc_desc(str, Enum):
     asc = "asc"
     desc = "desc"
 
-@router.get("/{user_id}/social/following_name/catalogs/catalog/search")
+@router.get("/{user_id}/search_entries")
 def get_recommended(user_id: int, 
                     page: int = 1,
                     following_name: str="",
@@ -94,7 +101,7 @@ def get_recommended(user_id: int,
                     order_by: entries_sort_col = entries_sort_col.title,
                     direction: asc_desc = asc_desc.asc,
                     return_type: entry_type = entry_type.movies):
-    """"""
+    """Get all recommended entries of a specific catalog from a user you are following"""
 
     #Start to build the stats and content statements generally for any entry type.
     stats_statement = (
@@ -352,70 +359,99 @@ def get_recommended(user_id: int,
 #     # searches (all ?) follower catalogs for a specified catalog title
 #     return "OK"
 
-@router.post("/{user_id}/social")
-def follow_user(user_id: int, user_name: str):
-    """ user_id will follow a user with user_name """
-    with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text(
-            """
-            INSERT INTO social (user_id, following_id)
-            VALUES(
-                :user_id,
-                (
+@router.post("/{user_id}")
+def follow_user(user_id: int, user_name: str, response: Response):
+    """Follow a user by their username"""
+    following_id = None
+    # outer: try to follow user, if username is not recognized in users table throw 404 response
+    try:
+        with db.engine.begin() as connection:
+            # inner: try to see if user to follow is already in following list or is yourself
+            # under exception condition, proceed as normal because the user is not yourself or already somebody you follow
+            try:
+                result = connection.execute(sqlalchemy.text(
+                    """
+                    SELECT following_id
+                    FROM social
+                    WHERE following_id = (
+                        SELECT id
+                        FROM users
+                        WHERE name = :user_name
+                        ) AND user_id = :user_id
+                    """), {'user_id': user_id, 'user_name': user_name}).scalar_one()
+                response.status_code = status.HTTP_400_BAD_REQUEST
+                return "User already in list of people you follow."
+            except:
+                new_follow = connection.execute(sqlalchemy.text(
+                    """
                     SELECT id
                     FROM users
-                    WHERE users.name = :user_name
-                )
-            )
-            """
-        ),
-            {
-                'user_id': user_id,
-                'user_name': user_name
-            }
-        )
-    return "OK"
-
-@router.delete("/{user_id}/social/{following_id}")
-def unfollow_user(user_id: int, following_name: str):
-    """ user_id unfollows following_name """
-    with db.engine.begin() as connection:
-        try:
-            result = connection.execute(sqlalchemy.text(
-                """
-                DELETE FROM social
-                WHERE following_id = (
-                    SELECT following_id
-                    FROM users
-                    WHERE users.name = :following_name
+                    WHERE name = :user_name
+                    """), {'user_name': user_name}).scalar_one()
+                if new_follow == user_id:
+                    response.status_code = status.HTTP_400_BAD_REQUEST
+                    return "Unable to add yourself to list of people to follow."
+                else:
+                    connection.execute(sqlalchemy.text(
+                        """
+                        INSERT INTO social (user_id, following_id)
+                        VALUES(:user_id, :new_follow)
+                        """
+                    ),
+                        {
+                            'user_id': user_id,
+                            'new_follow': new_follow
+                        }
                     )
-                    and social.user_id = :user_id;
+                    response.status_code = status.HTTP_200_OK
+                    return "OK"
+    except:
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return "User with requested username does not exist."
 
-                SELECT user_id, following_id
-                FROM social
-                WHERE user_id = :user_id
-                AND following_id = (
+@router.delete("/{user_id}")
+def unfollow_user(user_id: int, user_name: str, response: Response):
+    """Remove user from list of people to follow by username"""
+    try:
+        with db.engine.begin() as connection:
+                # check if user in follow list
+                check = connection.execute(sqlalchemy.text(
+                    """
                     SELECT following_id
-                    FROM users
-                    WHERE users.name = :following_name
+                    FROM social
+                    WHERE user_id = :user AND following_id = (
+                        SELECT id
+                        FROM users
+                        WHERE name = :user_name
+                        );
+                    """),
+                    {
+                        'user_name': user_name,
+                        'user': user_id,
+                    }
+                ).one()
+                connection.execute(sqlalchemy.text(
+                    """
+                    DELETE FROM social
+                    WHERE user_id = :user AND following_id = (
+                        SELECT id
+                        FROM users
+                        WHERE name = :user_name
+                        )
+                    """
+                ),
+                    {
+                        'user_name': user_name,
+                        'user': user_id,
+                    }
                 )
-                """
-            ),
-                {
-                    'following_name': following_name,
-                    'user_id': user_id,
-                    'following_name': following_name,
-                    'user_id': user_id
-                }
-            ).first()
-        except ():
-            return False
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return "User successfully removed from people you follow."
+    except:
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return "User by the requested name not found in list of people you follow."
 
-    if result != None:
-        print("row not deleted")
-        return False
-    else:
-        return True
+
 
 
 # @router.get("/{user_id}/social/search")
