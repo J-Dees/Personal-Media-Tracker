@@ -8,76 +8,6 @@ router = APIRouter(
     tags=["following"],
 )
 
-@router.get("/{user_id}")
-def get_following(user_id: int, response: Response):
-    """Return a list of all users that you are following"""
-    with db.engine.begin() as connection:
-        following = connection.execute(sqlalchemy.text(
-            """
-            SELECT name
-            FROM users
-            WHERE id IN (
-                SELECT following_id
-                FROM social
-                JOIN users ON users.id = social.user_id
-                WHERE social.user_id = :user_id
-                ORDER BY users.name ASC
-                )
-            """
-        ),
-            {
-                'user_id': user_id
-            }
-        ).mappings().fetchall()
-    response.status_code = status.HTTP_200_OK
-    return following
-
-
-
-@router.get("/{user_id}/search_catalogs")
-def view_following_catalogs(user_id:int , following_name: str, response: Response):
-    """View all public catalogs of a specific user that you are following """
-    try: 
-        with db.engine.begin() as connection:
-            result = connection.execute(sqlalchemy.text(
-                """
-                SELECT user_id, following_id
-                FROM social
-                JOIN users ON users.id = social.following_id
-                WHERE users.name = :following_name
-                AND user_id = :user_id
-                """
-            ), 
-                {
-                    'following_name': following_name,
-                    'user_id': user_id
-                }
-            ).first()
-
-        if result == None:
-            print(f"User is not following {following_name}")
-            return []
-
-        with db.engine.begin() as connection:
-            catalogs = connection.execute(sqlalchemy.text(
-                """
-                SELECT catalogs.name, catalogs.type
-                FROM catalogs
-                JOIN users ON users.id = catalogs.user_id
-                WHERE users.name = :following_name
-                AND catalogs.private = FALSE
-                """
-            ), 
-                {
-                    'following_name': following_name
-                }
-            ).mappings().fetchall()
-        response.status_code = status.HTTP_200_OK
-        return catalogs
-    except:
-        response.status_code = status.HTTP_404_NOT_FOUND
-        return "User by requested username not found in list of people you follow."
-
 class entry_type(str, Enum):
     games = "games"
     books = "books"
@@ -90,6 +20,79 @@ class entries_sort_col(str, Enum):
 class asc_desc(str, Enum):
     asc = "asc"
     desc = "desc"
+
+@router.get("/{user_id}")
+def get_following(user_id: int, 
+                  name: str = "",
+                  direction: asc_desc = asc_desc.asc,
+                  page: int = 1):
+    """Return a list of all users that you are following"""
+    stats_statement = (
+        sqlalchemy.select(
+            sqlalchemy.func.count(db.social.c.following_id).label("total_rows"))
+        .select_from(db.social)
+        .join(db.users, db.users.c.id == db.social.c.following_id)
+        .where(db.social.c.user_id == user_id)
+        .where(db.users.c.name.ilike(f"%{name}%"))
+    )
+    #Statement for gathering the primary content returned.
+    content_statement = (
+        sqlalchemy.select(
+            db.users.c.name)
+        .select_from(db.social)
+        .join(db.users, db.users.c.id == db.social.c.following_id)
+        .where(db.social.c.user_id == user_id)
+        .where(db.users.c.name.ilike(f"%{name}%"))
+        .limit(db.MAX_PER_PAGE).offset(db.MAX_PER_PAGE*(page-1))
+    )
+
+    if (direction == "desc"):
+        content_statement = content_statement.order_by(sqlalchemy.desc(db.users.c.name))
+    else:
+        content_statement = content_statement.order_by(db.users.c.name)
+
+    return db.execute_search(stats_statement, content_statement, page)
+
+@router.get("/{user_id}/search_catalogs")
+def view_following_catalogs(user_id:int , 
+                            name: str = "",
+                            catalog_name: str = "",
+                            direction: asc_desc = asc_desc.asc,
+                            page: int = 1):
+    """View all public catalogs of a specific user that you are following """
+    stats_statement = (
+        sqlalchemy.select(
+            sqlalchemy.func.count(db.social.c.following_id).label("total_rows"))
+        .select_from(db.social)
+        .join(db.users, db.users.c.id == db.social.c.following_id)
+        .join(db.catalogs, db.catalogs.c.user_id == db.social.c.following_id)
+        .where(db.social.c.user_id == user_id)
+        .where(db.users.c.name.ilike(f"%{name}%"))
+        .where(db.catalogs.c.name.ilike(f"%{catalog_name}%"))
+        .where(db.catalogs.c.private == False)
+    )
+    #Statement for gathering the primary content returned.
+    content_statement = (
+        sqlalchemy.select(
+            db.users.c.name.label("user"),
+            db.catalogs.c.name.label("catalog_name"),
+            db.catalogs.c.type)
+        .select_from(db.social)
+        .join(db.users, db.users.c.id == db.social.c.following_id)
+        .join(db.catalogs, db.catalogs.c.user_id == db.social.c.following_id)
+        .where(db.social.c.user_id == user_id)
+        .where(db.users.c.name.ilike(f"%{name}%"))
+        .where(db.catalogs.c.name.ilike(f"%{catalog_name}%"))
+        .where(db.catalogs.c.private == False)
+        .limit(db.MAX_PER_PAGE).offset(db.MAX_PER_PAGE*(page-1))
+    )
+
+    if (direction == "desc"):
+        content_statement = content_statement.order_by(sqlalchemy.desc(db.catalogs.c.name))
+    else:
+        content_statement = content_statement.order_by(db.catalogs.c.name)
+
+    return db.execute_search(stats_statement, content_statement, page)
 
 @router.get("/{user_id}/search_entries")
 def get_recommended(user_id: int, 
