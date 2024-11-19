@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from src import database as db
 
 router = APIRouter(
-    prefix="/user",
+    prefix="/catalogs",
     tags=["catalogs"],
 )
 
@@ -22,14 +22,14 @@ class asc_desc(str, Enum):
     asc = "asc"
     desc = "desc"
 
-@router.get("/{user_id}/catalogs/search")
-def search_catalogs(response: Response, 
+@router.get("/{user_id}")
+def fetch_user_catalogs(response: Response, 
                     user_id: int, 
                     page: int = 1, 
                     type: catalog_type = catalog_type.any, 
                     order_by: catalog_order_by = catalog_order_by.name, 
                     direction: asc_desc = asc_desc.asc):
-    '''Search A user's list of catalogs. Default will search the entire catalog ordered by name.'''
+    '''Search a user's list of catalogs. Default will search the entire catalog ordered by name.'''
     #Statement for gathering how many rows will be returned.
     stats_statement = (
         sqlalchemy.select(
@@ -63,10 +63,10 @@ class catalog_create(BaseModel):
     type: str
     private: bool
 
-@router.post("/{user_id}/catalogs")
+@router.post("/{user_id}")
 def create_catalog(user_id: int, entry: catalog_create, response: Response):
     # insert into the users catalogs a new catalog with a unqiue catalog id
-
+    # handle error if user enters invalid type
     entry_dict = entry.dict()
     entry_dict.update({"user_id": user_id})
     with db.engine.begin() as connection:
@@ -93,7 +93,7 @@ class catalog_update(BaseModel):
     name: str
     private: bool
 
-@router.put("/{user_id}/catalogs")
+@router.put("/{user_id}/{catalog_id}")
 def update_catalog(user_id: int, catalog_id: int, catalog_update: catalog_update):
     # update name/type of catalog with catalog id passed by user
     
@@ -109,7 +109,7 @@ def update_catalog(user_id: int, catalog_id: int, catalog_update: catalog_update
     
     return "OK"
 
-@router.delete("/{user_id}/catalogs")
+@router.delete("/{user_id}")
 def delete_catalog(user_id: int, catalog_id: int):
     # DELETE FROM catalog where catalog id = id passed by user
 

@@ -6,7 +6,7 @@ from src import database as db
 
 
 router = APIRouter(
-    prefix="/user",
+    prefix="/entries/games",
     tags=["game_entries"],
 )
 
@@ -30,7 +30,7 @@ class asc_desc(str, Enum):
     asc = "asc"
     desc = "desc"
         
-@router.get("/{user_id}/catalogs/{catalog_name}/entries/search")
+@router.get("/{user_id}/{catalog_name}")
 def entry_search(user_id: int, 
                  catalog_name: str,
                  page: int = 1, 
@@ -107,7 +107,7 @@ def game_doesnt_exist(title: str, year: int) -> bool:
         ), {"title": title, "year": year}).first()
     return result.verified
 
-@router.post("/{user_id}/catalogs/{catalog_name}/game_entries")
+@router.post("/{user_id}/{catalog_name}")
 def create_game_entry(user_id: int, catalog_name: str, entry: game_entries, response: Response):
     '''
     Creates a new entry for the user in a catalog.
@@ -172,7 +172,7 @@ class update_game_entries(BaseModel):
     hours_played: float
     play_again: bool
     
-@router.put("/{user_id}/catalogs/{catalog_name}/entries/{entry_title}")
+@router.put("/{user_id}/{catalog_name}/{entry_title}")
 def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: update_game_entries):
     # update any value of the specified entry
 
@@ -213,7 +213,7 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
 
     return "OK"
 
-@router.delete("/{user_id}/catalogs/{catalog_name}/game_entries/{entry_title}")
+@router.delete("/{user_id}/{catalog_name}/{entry_title}")
 def delete_entry(user_id: int, catalog_name: str, entry_title: str):
     # DELETE FROM entries specified title
 

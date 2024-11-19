@@ -7,7 +7,7 @@ from datetime import date
 
 
 router = APIRouter(
-    prefix="/user",
+    prefix="/entries/movies",
     tags=["movies_entries"],
 )
 
@@ -29,7 +29,7 @@ class asc_desc(str, Enum):
     asc = "asc"
     desc = "desc"
 
-@router.get("/{user_id}/catalogs/{catalog_name}/movie_entries/search")
+@router.get("/{user_id}/{catalog_name}")
 def entry_search(user_id: int, 
                  catalog_name: str,
                  page: int = 1, 
@@ -106,7 +106,7 @@ def movie_doesnt_exist(title: str, year: int) -> bool:
         ), {"title": title, "year": year}).first()
     return result.verified
 
-@router.post("/{user_id}/catalogs/{catalog_name}/movie_entries")
+@router.post("/{user_id}/{catalog_name}")
 def create_movie_entry(user_id: int, catalog_name: str, entry: movie_entries, response: Response):
     '''
 
@@ -168,7 +168,7 @@ class update_movie_entries(BaseModel):
     watch_again: bool
 
 
-@router.put("/{user_id}/catalogs/{catalog_name}/movie_entries/{entry_title}")
+@router.put("/{user_id}/{catalog_name}/{entry_title}")
 def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: update_movie_entries):
     # update any value of the specified entry
 
@@ -208,7 +208,7 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
 
     return "OK"
 
-@router.delete("/{user_id}/catalogs/{catalog_name}/movie_entries/{entry_title}")
+@router.delete("/{user_id}/{catalog_name}/{entry_title}")
 def delete_entry(user_id: int, catalog_name: str, entry_title: str):
     # DELETE FROM entries specified title
 
