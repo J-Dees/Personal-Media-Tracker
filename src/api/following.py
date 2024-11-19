@@ -4,7 +4,7 @@ import sqlalchemy
 from src import database as db
 
 router = APIRouter(
-    prefix="/following",
+    prefix="/users/{user_id}/followees",
     tags=["following"],
 )
 
@@ -21,7 +21,7 @@ class asc_desc(str, Enum):
     asc = "asc"
     desc = "desc"
 
-@router.get("/{user_id}")
+@router.get("")
 def get_following(user_id: int, 
                   name: str = "",
                   direction: asc_desc = asc_desc.asc,
@@ -53,8 +53,8 @@ def get_following(user_id: int,
 
     return db.execute_search(stats_statement, content_statement, page)
 
-@router.get("/{user_id}/search_catalogs")
-def view_following_catalogs(user_id:int , 
+@router.get("/catalogs")
+def view_followees_catalogs(user_id:int , 
                             name: str = "",
                             catalog_name: str = "",
                             direction: asc_desc = asc_desc.asc,
@@ -94,8 +94,8 @@ def view_following_catalogs(user_id:int ,
 
     return db.execute_search(stats_statement, content_statement, page)
 
-@router.get("/{user_id}/search_entries")
-def get_recommended(user_id: int, 
+@router.get("/entries")
+def get_followees_entries(user_id: int, 
                     page: int = 1,
                     following_name: str="",
                     catalog: str="",
@@ -250,7 +250,7 @@ def get_recommended(user_id: int,
     
     return db.execute_search(stats_statement, content_statement, page)
 
-@router.get("/{user_id}/follow_recommendations")
+@router.get("/follow-recommendations")
 def follow_recommendations(user_id: int):
     """Gets recommended users to follow."""
     with db.engine.begin() as connection:
@@ -311,7 +311,7 @@ def follow_recommendations(user_id: int):
         #Otherwise return the recommnedations.
         else: return result
 
-@router.post("/{user_id}")
+@router.post("")
 def follow_user(user_id: int, user_name: str, response: Response):
     """Follow a user by their username"""
     following_id = None
@@ -361,7 +361,7 @@ def follow_user(user_id: int, user_name: str, response: Response):
         response.status_code = status.HTTP_404_NOT_FOUND
         return "User with requested username does not exist."
 
-@router.delete("/{user_id}")
+@router.delete("/{user_name}")
 def unfollow_user(user_id: int, user_name: str, response: Response):
     """Remove user from list of people to follow by username"""
     try:

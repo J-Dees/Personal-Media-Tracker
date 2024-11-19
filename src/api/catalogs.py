@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from src import database as db
 
 router = APIRouter(
-    prefix="/catalogs",
+    prefix="/users/{user_id}/catalogs",
     tags=["catalogs"],
 )
 
@@ -22,7 +22,7 @@ class asc_desc(str, Enum):
     asc = "asc"
     desc = "desc"
 
-@router.get("/{user_id}")
+@router.get("")
 def fetch_user_catalogs(response: Response, 
                     user_id: int, 
                     page: int = 1, 
@@ -63,7 +63,7 @@ class catalog_create(BaseModel):
     type: str
     private: bool
 
-@router.post("/{user_id}")
+@router.post("")
 def create_catalog(user_id: int, entry: catalog_create, response: Response):
     # insert into the users catalogs a new catalog with a unqiue catalog id
     # handle error if user enters invalid type
@@ -93,7 +93,7 @@ class catalog_update(BaseModel):
     name: str
     private: bool
 
-@router.put("/{user_id}/{catalog_id}")
+@router.put("/{catalog_id}")
 def update_catalog(user_id: int, catalog_id: int, catalog_update: catalog_update):
     # update name/type of catalog with catalog id passed by user
     
@@ -109,7 +109,7 @@ def update_catalog(user_id: int, catalog_id: int, catalog_update: catalog_update
     
     return "OK"
 
-@router.delete("/{user_id}")
+@router.delete("/{catalog_id}")
 def delete_catalog(user_id: int, catalog_id: int):
     # DELETE FROM catalog where catalog id = id passed by user
 

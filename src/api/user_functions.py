@@ -29,7 +29,7 @@ class asc_desc(str, Enum):
     asc = "asc"
     desc = "desc"
 
-@router.get("/search")
+@router.get("")
 def get_users(page: int = 1, 
               name: str = "",
               direction: asc_desc = asc_desc.asc):
@@ -57,7 +57,7 @@ def get_users(page: int = 1,
 
     return db.execute_search(stats_statement, content_statement, page)
 
-@router.get("")
+@router.get("/{user_name}")
 def login_user(name, response: Response):
     '''Allows the user to login with their username. If no such user exists, a message is sent to inform that no user exists by that name.'''
     with db.engine.begin() as connection:
@@ -75,7 +75,7 @@ def login_user(name, response: Response):
             response.status_code = status.HTTP_404_NOT_FOUND
             return "User with provided username not found."
 
-@router.delete("")
+@router.delete("/{user_id}")
 def delete_user(user_id, response: Response):
     '''Deletes a user account. This will remove all traces of the user including catalogs, entries, and followers.'''
     # API Spec notes that user will receive a warning prior to deletion

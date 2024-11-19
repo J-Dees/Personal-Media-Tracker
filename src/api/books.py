@@ -15,7 +15,7 @@ class sort_col_books(str, Enum):
     book_title = 'book_title'
     author = 'author'
 
-@router.get("/search")
+@router.get("")
 #                   default page 1, default book_title and author are all, default sorting column is book_title.
 def search_books(page: int = 1, book_title: str = "", author: str = "", sort_col: sort_col_books = sort_col_books.book_title):
     """

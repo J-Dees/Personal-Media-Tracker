@@ -15,7 +15,7 @@ class sort_col_games(str, Enum):
     game_title = 'game_title'
     year = 'year'
 
-@router.get("/search")
+@router.get("")
 #                   default page 1, default game_title and year are all, default sorting column is game_title.
 def search_games(page: int = 1, game_title: str = "", year: int = None, sort_col: sort_col_games = sort_col_games.game_title):
     """

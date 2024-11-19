@@ -7,7 +7,7 @@ from datetime import date
 
 
 router = APIRouter(
-    prefix="/entries/other",
+    prefix="/users/{user_id}/catalogs/{catalog_name}/other-entries",
     tags=["other_entries"],
 )
 
@@ -29,7 +29,7 @@ class asc_desc(str, Enum):
     asc = "asc"
     desc = "desc"
 
-@router.get("/{user_id}/{catalog_name}")
+@router.get("")
 def entry_search(user_id: int, 
                  catalog_name: str,
                  page: int = 1, 
@@ -97,7 +97,7 @@ def entry_exists(user_id: int, catalog_name: str, entry_title: str) -> bool:
     print(result.verified)
     return result.verified
 
-@router.post("/{user_id}/{catalog_name}")
+@router.post("")
 def create_other_entry(user_id: int, catalog_name: str, entry: other_entries):
     '''
     
@@ -153,7 +153,7 @@ class update_other_entries(BaseModel):
     price: float
     quality: str
 
-@router.put("/{user_id}/{catalog_name}/{entry_title}")
+@router.put("/{entry_title}")
 def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: update_other_entries):
     # update any value of the specified entry
     print(entry_title)
@@ -189,7 +189,7 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
         print("Error:", e)
     return "OK"
 
-@router.delete("/{user_id}/{catalog_name}/{entry_title}")
+@router.delete("/{entry_title}")
 def delete_entry(user_id: int, catalog_name: str, entry_title: str):
     # DELETE FROM entries specified title
 
