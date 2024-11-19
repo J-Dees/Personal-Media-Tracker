@@ -29,7 +29,7 @@ class asc_desc(str, Enum):
     asc = "asc"
     desc = "desc"
 
-@router.get("/search_users")
+@router.get("/search")
 def get_users(page: int = 1, 
               name: str = "",
               direction: asc_desc = asc_desc.asc):
@@ -78,6 +78,7 @@ def login_user(name, response: Response):
 @router.delete("")
 def delete_user(user_id, response: Response):
     '''Deletes a user account. This will remove all traces of the user including catalogs, entries, and followers.'''
+    # API Spec notes that user will receive a warning prior to deletion
     try:
         with db.engine.begin() as connection:
             connection.execute(sqlalchemy.text(
@@ -90,4 +91,4 @@ def delete_user(user_id, response: Response):
         return "Successfully deleted user account and all references."
     except:
         response.status_code = status.HTTP_404_NOT_FOUND
-        return "User with provided username not found"
+        return "Invalid user id."

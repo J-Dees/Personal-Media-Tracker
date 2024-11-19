@@ -7,7 +7,7 @@ from datetime import date
 
 
 router = APIRouter(
-    prefix="/user",
+    prefix="/entries/books",
     tags=["book_entries"],
 )
 
@@ -58,7 +58,7 @@ class asc_desc(str, Enum):
     asc = "asc"
     desc = "desc"
 
-@router.get("/{user_id}/catalogs/{catalog_name}/book_entries/search")
+@router.get("/{user_id}/{catalog_name}")
 def entry_search(user_id: int, 
                  catalog_name: str,
                  page: int = 1, 
@@ -106,7 +106,7 @@ def entry_search(user_id: int,
 
     return db.execute_search(stats_statement, content_statement, page)
 
-@router.post("/{user_id}/catalogs/{catalog_name}/book_entries")
+@router.post("/{user_id}/{catalog_name}")
 def create_entry(user_id: int, catalog_name: str, entry: book_entries, response: Response):
     '''
 
@@ -166,7 +166,7 @@ class update_book_entries(BaseModel):
     rating: float
     read_again: bool
 
-@router.put("/{user_id}/catalogs/{catalog_name}/book_entries/{entry_title}")
+@router.put("/{user_id}/{catalog_name}/{entry_title}")
 def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: update_book_entries):
     # update any value of the specified entry
 
@@ -205,7 +205,7 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
 
     return "OK"
 
-@router.delete("/{user_id}/catalogs/{catalog_name}/book_entries/{entry_title}")
+@router.delete("/{user_id}/{catalog_name}/{entry_title}")
 def delete_entry(user_id: int, catalog_name: str, entry_title: str):
     # DELETE FROM entries specified title
 
