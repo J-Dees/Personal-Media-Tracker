@@ -419,6 +419,8 @@ The entries will be listed by `user`, `title`, and `type`
 
 ### `/following/{user_id}/follow_recommendations` (GET)
 
+Return a list of users to follow based on the current list of people that you already follow and the people they follow.
+
 **Response**:
 
 ```json
