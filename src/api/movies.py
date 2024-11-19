@@ -14,7 +14,7 @@ class sort_col_movies(str, Enum):
     movie_title = 'movie_title'
     year = 'year'
 
-@router.get("/search")
+@router.get("")
 #                   default page 1, default movie_title and year are all, default sorting column is movie_title.
 def search_movies(page: int = 1, movie_title: str = "", year: int = None, sort_col: sort_col_movies = sort_col_movies.movie_title):
     """
