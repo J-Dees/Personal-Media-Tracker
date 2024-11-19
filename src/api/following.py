@@ -249,118 +249,67 @@ def get_recommended(user_id: int,
             content_statement = content_statement.order_by(sort_col.get(order_by))
     
     return db.execute_search(stats_statement, content_statement, page)
-    # """ view all catalog entries that are flagged as recommended in a given catalog of a user that you are following"""
-    # # this is probably something we can implement into a user's own catalogs as well
 
-    # with db.engine.begin() as connection:
-    #     result = connection.execute(sqlalchemy.text(
-    #         """
-    #         SELECT user_id, following_id
-    #         FROM social
-    #         JOIN users ON users.id = social.following_id
-    #         WHERE users.name = :following_name
-    #         AND user_id = :user_id
-    #         """
-    #     ), 
-    #         {
-    #             'following_name': following_name,
-    #             'user_id': user_id
-    #         }
-    #     ).first()
+@router.get("/{user_id}/follow_recommendations")
+def follow_recommendations(user_id: int):
+    """Gets recommended users to follow."""
+    with db.engine.begin() as connection:
 
-    # if result == None:
-    #     print(f"User is not following {following_name}")
-    #     return []
-
-    # with db.engine.begin() as connection:
-    #     catalog_type = connection.execute(sqlalchemy.text(
-    #         """
-    #         SELECT type
-    #         FROM catalogs
-    #         JOIN users ON users.id = catalogs.user_id
-    #         WHERE users.name = :following_name
-    #         """
-    #     ),{'following_name': following_name}).scalar()
-
-
-    # with db.engine.begin() as connection:
-    #     match catalog_type:
-    #         case 'games':
-    #             recommended_entries = connection.execute(sqlalchemy.text(
-    #                 """
-    #                 SELECT
-    #                     games.game_title,
-    #                     games.year,
-    #                     game_entry.entry_id,
-    #                     game_entry.hours_played,
-    #                     game_entry.opinion,
-    #                     game_entry.rating,
-    #                     game_entry.recommend
-    #                 FROM catalogs
-    #                 JOIN users ON users.id = catalogs.user_id
-    #                 JOIN entries ON entries.catalog_id = catalogs.id
-    #                 JOIN game_entry ON game_entry.entry_id = entries.id
-    #                 JOIN games ON games.id = game_entry.game_id
-    #                 """
-    #             )).mappings().fetchall()
-    #         case 'movies':
-    #             recommended_entries = connection.execute(sqlalchemy.text(
-    #                 """
-    #                 SELECT 
-    #                     movies.movie_title,
-    #                     movies.year,
-    #                     movie_entry.date_seen, 
-    #                     movie_entry.opinion, 
-    #                     movie_entry.rating, 
-    #                     movie_entry.watch_again,
-    #                     entries.recommend
-    #                 FROM catalogs
-    #                 JOIN users ON users.id = catalogs.user_id
-    #                 JOIN entries ON entries.catalog_id = catalogs.id
-    #                 JOIN movie_entry ON movie_entry.entry_id = entries.id
-    #                 JOIN movies ON movies.id = movie_entry.movie_id
-    #                 """
-    #             )).mappings().fetchall()
-    #         case 'books':
-    #             recommended_entries = connection.execute(sqlalchemy.text(
-    #                 """
-    #                 SELECT
-    #                     books.book_title,
-    #                     books.author,
-    #                     book_entry.date_read,
-    #                     book_entry.opinion,
-    #                     book_entry.rating,
-    #                     book_entry.read_again
-    #                     entries.recommend
-    #                 FROM catalogs
-    #                 JOIN users ON users.id = catalogs.user_id
-    #                 JOIN entries ON entries.catalog_id = catalogs.id
-    #                 JOIN book_entry ON book_entry.entry_id = entries.id
-    #                 JOIN books ON books.id = book_entry.book_id
-    #                 """
-    #             )).mappings().fetchall()
-    #         case 'other':
-    #             recommended_entries = connection.execute(sqlalchemy.text(
-    #                 """
-    #                 SELECT
-    #                     other_entry.title,
-    #                     other_entry.description,
-    #                     other_entry.price,
-    #                     other_entry.quality,
-    #                     entries.recommend
-    #                 FROM catalogs
-    #                 JOIN users ON users.id = catalogs.user_id
-    #                 JOIN entries ON entries.catalog_id = catalogs.id
-    #                 JOIN other_entry ON other_entry.entry_id = entries.id
-    #                 """
-    #             )).mappings().fetchall()
-
-    # return recommended_entries
-
-# @router.get("/{user_id}/social/search/{title}")
-# def search_catalogs():
-#     # searches (all ?) follower catalogs for a specified catalog title
-#     return "OK"
+        result = connection.execute(sqlalchemy.text(
+            """
+            -- SELECT all users the individual is following.
+            WITH followings AS (
+              SELECT
+                social.following_id AS following
+              FROM social
+              WHERE social.user_id = :user_id
+            ), 
+            -- SELECT how many followings each user has in common with the individual.
+            common_following AS (
+              SELECT
+                user_id AS user,
+                count(following_id) AS total_common
+              FROM social
+              where following_id in (SELECT following FROM followings)
+              GROUP BY user_id
+              ORDER BY total_common DESC
+            ), 
+            -- SELECT all following from users that the individual isn't already following. Weight *  
+            recommending AS (
+              SELECT
+                users.name AS recommendation
+              FROM social
+              JOIN common_following ON social.user_id = common_following.user
+              JOIN users ON users.id = social.following_id
+              WHERE 
+               following_id NOT IN (SELECT following FROM followings) and
+               following_id != :user_id
+              GROUP BY following_id, users.name
+              ORDER BY sum(total_common) DESC, users.name 
+            )
+            SELECT recommendation FROM recommending
+            LIMIT 10
+            """), {"user_id": user_id}).mappings().fetchall()
+        
+        #If no recommendations get the most popular as recomendations.
+        if len(result) == 0:
+            result = connection.execute(sqlalchemy.text(
+                """
+                SELECT
+                  name
+                from social
+                Join users ON users.id = social.following_id
+                Group by name
+                ORDER BY count(following_id) desc
+                LIMIT 5
+                """)).mappings().fetchall()
+            
+            return {
+                "About": "Please friend more people to come up with recommendations. Here is list of some popular people to follow.",
+                "return": result
+            }
+        #Otherwise return the recommnedations.
+        else: return result
 
 @router.post("/{user_id}")
 def follow_user(user_id: int, user_name: str, response: Response):
@@ -453,91 +402,3 @@ def unfollow_user(user_id: int, user_name: str, response: Response):
     except:
         response.status_code = status.HTTP_404_NOT_FOUND
         return "User by the requested name not found in list of people you follow."
-
-
-
-
-# @router.get("/{user_id}/social/search")
-# def get_followers(user_id: int):
-#     """ gets user_id's followers """
-#     with db.engine.begin() as connection:
-#         followers = connection.execute(sqlalchemy.text(
-#             """
-#             SELECT users.name
-#             FROM social
-#             JOIN users ON users.id = social.user_id
-#             WHERE social.following_id = :user_id
-#             ORDER BY users.name ASC
-#             """
-#         ),
-#             {
-#                 'user_id': user_id
-#             }
-#         ).mappings().fetchall()
-
-#     return followers
-
-# @router.post("/{user_id}/social")
-# def follower_user(user_id: int, user_name: str):
-#     """ user_id will follow a user with user_name """
-#     with db.engine.begin() as connection:
-#         connection.execute(sqlalchemy.text(
-#             """
-#             INSERT INTO social (user_id, following_id)
-#             VALUES(
-#                 :user_id,
-#                 (
-#                     SELECT id
-#                     FROM users
-#                     WHERE users.name = :user_name
-#                 )
-#             )
-#             """
-#         ),
-#             {
-#                 'user_id': user_id,
-#                 'user_name': user_name
-#             }
-#         )
-#     return "OK"
-
-# @router.delete("/{user_id}/social/{following_id}")
-# def unfollow(user_id: int, following_name: str):
-#     """ user_id unfollows following_name """
-#     with db.engine.begin() as connection:
-#         try:
-#             result = connection.execute(sqlalchemy.text(
-#                 """
-#                 DELETE FROM social
-#                 WHERE following_id = (
-#                     SELECT following_id
-#                     FROM users
-#                     WHERE users.name = :following_name
-#                     )
-#                     and social.user_id = :user_id;
-
-#                 SELECT user_id, following_id
-#                 FROM social
-#                 WHERE user_id = :user_id
-#                 AND following_id = (
-#                     SELECT following_id
-#                     FROM users
-#                     WHERE users.name = :following_name
-#                 )
-#                 """
-#             ),
-#                 {
-#                     'following_name': following_name,
-#                     'user_id': user_id,
-#                     'following_name': following_name,
-#                     'user_id': user_id
-#                 }
-#             ).first()
-#         except ():
-#             return False
-
-#     if result != None:
-#         print("row not deleted")
-#         return False
-#     else:
-#         return True
