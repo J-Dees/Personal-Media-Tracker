@@ -16,9 +16,9 @@
 
 ### Catalogs
 - `/catalogs/{user_id}` (POST)
-- `/catalog/{user_id}/search` (GET)
-- `/catalog/{user_id}` (DELETE)
-- `/catalog/{user_id}/{catalog_id}` (PUT)
+- `/catalogs/{user_id}/search` (GET)
+- `/catalogs/{user_id}` (DELETE)
+- `/catalogs/{user_id}/{catalog_id}` (PUT)
 
 ### Following
 - `/following/{user_id}` (GET)
