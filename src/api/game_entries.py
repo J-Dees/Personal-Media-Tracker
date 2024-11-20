@@ -185,9 +185,23 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
 
 
         with db.engine.begin() as connection:
+
+            # Get catalog id
+            catalog_id = connection.execute(sqlalchemy.text(
+                """
+                SELECT
+                    id
+                FROM
+                    catalogs
+                WHERE
+                    user_id = :user_id and
+                    name = :catalog_name
+                """
+            ), {"user_id": user_id, "catalog_name": catalog_name}).one()
+
             parameters = entry.dict()
             parameters.update({"entry_title": entry_title})
-
+            parameters.update({"catalog_id": catalog_id.id})
             connection.execute(sqlalchemy.text(
                 """
                 UPDATE
@@ -203,7 +217,7 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
                     FROM entries
                     JOIN game_entry ON game_entry.entry_id = entries.id
                     JOIN games on games.id = game_entry.game_id
-                    WHERE game_title = :entry_title
+                    WHERE game_title = :entry_title and entries.catalog_id = :catalog_id
                     )
                 """
             ), parameters)
@@ -225,6 +239,20 @@ def delete_entry(user_id: int, catalog_name: str, entry_title: str):
             raise Exception("Entry does not exist.")
         
         with db.engine.begin() as connection:
+
+            # Get catalog id
+            catalog_id = connection.execute(sqlalchemy.text(
+                """
+                SELECT
+                    id
+                FROM
+                    catalogs
+                WHERE
+                    user_id = :user_id and
+                    name = :catalog_name
+                """
+            ), {"user_id": user_id, "catalog_name": catalog_name}).one()
+
             connection.execute(sqlalchemy.text(
                 """
                 DELETE FROM
@@ -235,10 +263,11 @@ def delete_entry(user_id: int, catalog_name: str, entry_title: str):
                     FROM entries
                     JOIN game_entry ON game_entry.entry_id = entries.id
                     JOIN games on games.id = game_entry.game_id
-                    WHERE game_title = :entry_title
+                    WHERE game_title = :entry_title and catalog_id = :catalog_id
                     )
                 """
-            ), {"entry_title": entry_title})
+            ), {"entry_title": entry_title, "catalog_id": catalog_id.id})
+            
     except Exception as e:
         print("Error:", e)
 
