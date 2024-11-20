@@ -3,45 +3,44 @@
 ## Table of contents
 
 ### User Functions
-- `/users` (GET)
-- `/users` (DELETE)
+- `/users/{user_name}` (GET)
+- `/users/{user_id}` (DELETE)
 - `/users` (POST)
-- `/users/search` (GET)
+- `/users` (GET)
 
 ### Entries
-- `/entries/{type}/{user_id}/{catalog_name}` (POST)
-- `/entries/{type}/{user_id}/{catalog_name}` (GET)
-- `/entries/{type}/{user_id}/{catalog_name}/{entry_title}` (PUT)
-- `/entries/{type}/{user_id}/{catalog_name}` (DELETE)
+- `/users/{user_id}/catalogs/{catalog_name}/{type}-entries` (POST)
+- `/users/{user_id}/catalogs/{catalog_name}/{type}-entries` (GET)
+- `/users/{user_id}/catalogs/{catalog_name}/{type}-entries/{entry_title}` (PUT)
+- `/users/{user_id}/catalogs/{catalog_name}/{type}-entries/{entry_title}` (DELETE)
 
 ### Catalogs
-- `/catalogs/{user_id}` (POST)
-- `/catalogs/{user_id}/search` (GET)
-- `/catalogs/{user_id}` (DELETE)
-- `/catalogs/{user_id}/{catalog_id}` (PUT)
+- `/users/{user_id}/catalogs` (POST)
+- `/users/{user_id}/catalogs` (GET)
+- `/users/{user_id}/catalogs/{catalog_id}` (DELETE)
+- `/users/{user_id}/catalogs/{catalog_id}` (PUT)
 
 ### Following
-- `/following/{user_id}` (GET)
-- `/following/{user_id}` (POST)
-- `/following/{user_id}` (DELETE)
-- `/following/{user_id}/search_catalogs` (GET)
-- `/following/{user_id}/search_entries` (GET)
-- `/following/{user_id}/follow_recommendations` (GET)
+- `/users/{user_id}/followees` (GET)
+- `/users/{user_id}/followees` (POST)
+- `/users/{user_id}/followees/{user_name}` (DELETE)
+- `/users/{user_id}/followees/catalogs` (GET)
+- `/users/{user_id}/followees/entries` (GET)
+- `/users/{user_id}/followees/follow-recommendations` (GET)
 
 ## Querying Data for New Entries
-- `/games/search` (GET)
-- `/movies/search` (GET)
-- `/books/search` (GET)
+- `/games` (GET)
+- `/movies` (GET)
+- `/books` (GET)
 
 ## Admin
 - `/admin/reset` (POST)
-- `/admin/load` (POST)
 
 # User Functions
 
-### `/users` (GET)
+### `/users/{user_name}` (GET)
 
-Returns the user_id of the username passed in. When making calls with a user_id it un-restricts all private catalogs and entries. Also allows for appending and deleting catalogs and entries. (This is our method of logging in as a user, alternatively users can be searched by `/users/search`)
+Returns the user_id of the username passed in. When making calls with a user_id it un-restricts all private catalogs and entries. Also allows for appending and deleting catalogs and entries. (This is our method of logging in as a user, alternatively users can be searched by `GET /users`)
 
 **Request**:
 
@@ -59,7 +58,7 @@ Returns the user_id of the username passed in. When making calls with a user_id 
 }
 ```
 
-### `/users` (DELETE)
+### `/users/{user_id}` (DELETE)
 
 Delete user_id's account and all information related to it. Gives a confirmation or warning.
 
@@ -91,7 +90,7 @@ Create a new user account with the specified unique name. gives status feedback 
 
 `HTTP 201 Created`
 
-### `/users/search` (GET)
+### `/users` (GET)
 
 Searches all users, optionally filtered by name. This can be used to help find people to follow.
 
@@ -113,7 +112,7 @@ The users will be listed by `name`
 
 #### {type} refers to the type of entry for a catalog; either games, movies, books, or other
 
-### `/entries/{type}/{user_id}/{catalog_name}` (POST)
+### `/users/{user_id}/catalogs/{catalog_name}/{type}-entries` (POST)
 
 Creates an entry for user_id in catalog_name. The request body has all the fields to be filled in for the entry.
 
@@ -180,7 +179,7 @@ Creates an entry for user_id in catalog_name. The request body has all the field
 
 `HTTP 201 Created`
 
-### `/entries/{type}/{user_id}/{catalog_name}/{entry_title}` (PUT)
+### `/users/{user_id}/catalogs/{catalog_name}/{type}-entries/{entry_title}` (PUT)
 
 Updates the entry entry_title in catalog_name under user_id with any of the fields (optional) that are to be updated. The last modified attribute will be updated to the current time for each usage of the PUT request.
 
@@ -230,7 +229,7 @@ Updates the entry entry_title in catalog_name under user_id with any of the fiel
 
 `HTTP 202 Accepted`
 
-### `/entries/{type}/{user_id}/{catalog_name}` (GET)
+### `/users/{user_id}/catalogs/{catalog_name}/{type}-entries` (GET)
 
 Gets a list of both public and private entries in catalog_name under user_id. The list will have 50 entries per page. Search is sorted based on the query parameter.
 
@@ -251,7 +250,7 @@ A JSON response is produced with the following information:
 `results`: An array of JSON objects representing the entries returned by the query
 The entries will be listed by all relevant information according to the type of entries
 
-### `/entries/{type}/{user_id}/{catalog_name}/{entry_title}` (DELETE) 
+### `/users/{user_id}/catalogs/{catalog_name}/{type}-entries/{entry_title}` (DELETE) 
 
 Deletes the entry under user_id in catalog_name with the title entry_title.
 
@@ -261,7 +260,7 @@ Deletes the entry under user_id in catalog_name with the title entry_title.
 
 # Catalogs
 
-### `/catalogs/{user_id}` (POST)
+### `/users/{user_id}/catalogs` (POST)
 
 Creates a catalog for user_id. The request body has all the fields to be filled in for the catalog.
 
@@ -279,7 +278,7 @@ Creates a catalog for user_id. The request body has all the fields to be filled 
 
 `HTTP 201 Created`
 
-### `/catalogs/{user_id}` (GET)
+### `/users/{user_id}/catalogs` (GET)
 
 Searches through a user’s catalogs using (optional) specified queries.
 
@@ -298,7 +297,7 @@ A JSON response is produced with the following information:
 `results`: An array of JSON objects representing the catalogs returned by the query
 The catalogs will be listed by `title`, `type`, and `private`
 
-### `/catalogs/{user_id}` (DELETE)
+### `/users/{user_id}/catalogs/{catalog_id}` (DELETE)
 
 Deletes the specified catalog by id from a user’s list of catalogs.
 
@@ -306,7 +305,7 @@ Deletes the specified catalog by id from a user’s list of catalogs.
 
 `HTTP 204 No Content`
 
-### `/catalogs/{user_id}/{catalog_id}` (PUT)
+### `/users/{user_id}/catalogs/{catalog_id}` (PUT)
 
 Used to update the name or privacy of a catalog.
 
@@ -325,7 +324,7 @@ Used to update the name or privacy of a catalog.
 
 # Following
 
-### `/following/{user_id}` (POST) 
+### `/users/{user_id}/followees` (POST) 
 
 Adds the user by username to user_id’s following list.
 
@@ -341,7 +340,7 @@ Adds the user by username to user_id’s following list.
 
 `HTTP 201 Created`
 
-### `/following/{user_id}` (GET) 
+### `/users/{user_id}/followees` (GET) 
 
 Gets a list of all users that user_id is following. The list will have 25 entries per page.
 
@@ -359,7 +358,7 @@ A JSON response is produced with the following information:
 `content`: An array of JSON objects representing the catalogs returned by the query
 The users will be listed by `name`
 
-### `/following/{user_id}` (DELETE)
+### `/users/{user_id}/followees/{user_name}` (DELETE)
 
 Delete the user by name from user_id's follow list.
 
@@ -376,7 +375,7 @@ Delete the user by name from user_id's follow list.
 `HTTP 204 No Content`
 
 
-### `/following/{user_id}/search_catalogs` (GET)
+### `/users/{user_id}/followees/catalogs` (GET)
 
 Returns all public catalogs from follower_name
 
@@ -395,7 +394,7 @@ A JSON response is produced with the following information:
 `content`: An array of JSON objects representing the catalogs returned by the query
 The catalogs will be listed by `user`, `catalog_name`, and `type`
 
-### `/following/{user_id}/search_entries` (GET)
+### `/users/{user_id}/followees/entries` (GET)
 
 Returns all entries in a followed user's public catalog where the recommend attribute is true.
 
@@ -417,7 +416,7 @@ A JSON response is produced with the following information:
 `content`: An array of JSON objects representing the entries returned by the query
 The entries will be listed by `user`, `title`, and `type`
 
-### `/following/{user_id}/follow_recommendations` (GET)
+### `/users/{user_id}/followees/follow-recommendations` (GET)
 
 Return a list of users to follow based on the current list of people that you already follow and the people they follow.
 
@@ -430,3 +429,72 @@ Return a list of users to follow based on the current list of people that you al
   }
 ]
 ```
+
+# Querying Data for New Entries
+
+### `/games` (GET)
+
+Searches the games database for video game metadata.
+
+**Query Parameters**:
+
+`page`: Desired page of results to display (Default: 1, limited to 25 items)
+`game_title` (optional): Search for a game that contains the entered value
+`year` (optional): The year of a title (useful for when games have the same title)
+`sort_col`: The attribute to order results by (Default: `game_title`)
+
+**Response**:
+
+A JSON response is produced with the following information:
+`page`: Query page of results (limited to 25)
+`max_page`: The maximum page of results determined by the amount of objects generated by a response
+`content`: An array of JSON objects representing the games returned by the query
+The games will be listed by `game_title` and `year`
+
+### `/movies` (GET)
+
+Searches the movies database for movie metadata.
+
+**Query Parameters**:
+
+`page`: Desired page of results to display (Default: 1, limited to 25 items)
+`movie_title` (optional): Search for a movie that contains the entered value
+`year` (optional): The year of a title (useful for when movies have the same title)
+`sort_col`: The attribute to order results by (Default: `movie_title`)
+
+**Response**:
+
+A JSON response is produced with the following information:
+`page`: Query page of results (limited to 25)
+`max_page`: The maximum page of results determined by the amount of objects generated by a response
+`content`: An array of JSON objects representing the movies returned by the query
+The movies will be listed by `movie_title` and `year`
+
+### `/books` (GET)
+
+Searches the books database for book metadata.
+
+**Query Parameters**:
+
+`page`: Desired page of results to display (Default: 1, limited to 25 items)
+`book_title` (optional): Search for a book that contains the entered value
+`author` (optional): The author of a title
+`sort_col`: The attribute to order results by (Default: `book_title`)
+
+**Response**:
+
+A JSON response is produced with the following information:
+`page`: Query page of results (limited to 25)
+`max_page`: The maximum page of results determined by the amount of objects generated by a response
+`content`: An array of JSON objects representing the books returned by the query
+The books will be listed by `book_title` and `author`
+
+# Admin
+
+### `/admin/reset`
+
+Resets the state of the database and loads in all movie, game, and book metadata. (Do not use this in practicality)
+
+**Response**:
+
+`HTTP 200 OK`
