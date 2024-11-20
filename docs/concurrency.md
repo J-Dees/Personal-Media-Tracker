@@ -12,4 +12,9 @@
 ### Solution:
 - Using a serializable isolation level will prevent any changes to be done by T2 before T1 is done.
 
-## Case 3:
+## Case 3: Phantom Read
+**T1** ```POST /users/{user_id}/catalogs/{catalog_name}/game-entries```\
+**T2** ```DELETE /users/{user_id}/catalogs/{catalog_id}```\
+![alt text](concurrency_3.PNG)
+### Solution:
+- Using a serializable isolation level will prevent any changes from being made by T2 before T1 is done.
