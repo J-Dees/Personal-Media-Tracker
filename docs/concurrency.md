@@ -5,7 +5,11 @@
 ### Solution:
 - Using a repeatable read isolation level will allow T1 to read twice and get consistent results. Thus T1 will have no knowlage of the delete.
 
-## Case 2:
-- 
+## Case 2: Lost Update
+**T1** ```PUT /users/{user_id}/catalogs/{catalog_id}```\
+**T2** ```PUT /users/{user_id}/catalogs/{catalog_id}```
+![alt text](concurrency_2.png)
+### Solution:
+- Using a serializable isolation level will prevent any changes to be done by T2 before T1 is done.
 
 ## Case 3:
