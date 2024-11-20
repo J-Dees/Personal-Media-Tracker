@@ -50,13 +50,3 @@ def reset_db():
         print("Reset finished.")
     
     return 'OK'
-
-@router.post("/load")
-def load_data():
-    movies = parse_csv("movies_data.csv")
-    with db.engine.begin() as connection:
-        print("Beggining Load...")
-        connection.execute(sqlalchemy.text("INSERT INTO test_movies (id, movie_title, year) VALUES (:id, :movie_title, :year)"), movies)
-        print("Load finished...")
-    
-    return 'OK'
