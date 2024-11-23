@@ -7,12 +7,12 @@ import random
 
 def database_connection_url():
     dotenv.load_dotenv()
-
     return os.environ.get("POSTGRES_URI")
 
 engine = sqlalchemy.create_engine(database_connection_url(), use_insertmanyvalues=True)
 
 with engine.begin() as connection:
+    # Selects all users and their follower count, in case we want to use that as a scale for posts
     users = connection.execute(sqlalchemy.text(
         """
         with top_users as (
@@ -38,6 +38,7 @@ with engine.begin() as connection:
     
 
     print("Generating user->post mapping...")
+    # Assuming normal distribution of posts, could also be negative binomial
     post_distribution = np.random.normal(275, 55, len(users))
     total_posts = 0
     user_post_mapping = []
@@ -62,6 +63,15 @@ with engine.begin() as connection:
     faker = Faker()
     catalog_types = ['games', 'books', 'movies', 'other']
     count = 0
+    
+    # Store games, movies, and book id's for faster sampling
+    games = connection.execute(sqlalchemy.text("select id from games")).fetchall()
+    games = [game[0] for game in games]
+    movies = connection.execute(sqlalchemy.text("select id from movies")).fetchall()
+    movies = [movie[0] for movie in movies]
+    books = connection.execute(sqlalchemy.text("select id from books")).fetchall()
+    books = [book[0] for book in books]
+
     for user in user_post_mapping:
         count+=1
         if count % 10 == 0: print(count)
@@ -75,6 +85,7 @@ with engine.begin() as connection:
         for entry_type in catalogs:
             catalog_name = faker.user_name()
             private_catalog = faker.boolean()
+
             if (entry_type == 'games'):
                 # Create a catalog with type games
                 catalog = connection.execute(sqlalchemy.text(
@@ -84,11 +95,7 @@ with engine.begin() as connection:
                     returning id
                     """
                 )).first()
-                random_games = connection.execute(sqlalchemy.text(
-                    f"""
-                    select id from games order by random() limit {num_posts_each}
-                    """
-                ))
+                random_games = random.sample(games, num_posts_each)
                 
                 for game in random_games:
                     hours_played = round(random.uniform(0, 10),2)
@@ -107,7 +114,7 @@ with engine.begin() as connection:
                     connection.execute(sqlalchemy.text(
                         f"""
                         insert into game_entry (entry_id, game_id, hours_played, opinion, rating, play_again)
-                        values ({entry.id}, {game.id}, {hours_played}, '{opinion}', {rating}, {play_again})
+                        values ({entry.id}, {game}, {hours_played}, '{opinion}', {rating}, {play_again})
                         """
                     ))
             if (entry_type == 'movies'):
@@ -119,11 +126,7 @@ with engine.begin() as connection:
                     returning id
                     """
                 )).first()
-                random_movies = connection.execute(sqlalchemy.text(
-                    f"""
-                    select id from movies order by random() limit {num_posts_each}
-                    """
-                ))
+                random_movies = random.sample(movies, num_posts_each)
                 
                 for movie in random_movies:
                     date_seen = faker.date_this_decade()
@@ -142,7 +145,7 @@ with engine.begin() as connection:
                     connection.execute(sqlalchemy.text(
                         f"""
                         insert into movie_entry (entry_id, movie_id, date_seen, opinion, rating, watch_again)
-                        values ({entry.id}, {movie.id}, CAST('{date_seen}' AS DATE), '{opinion}', {rating}, {watch_again})
+                        values ({entry.id}, {movie}, CAST('{date_seen}' AS DATE), '{opinion}', {rating}, {watch_again})
                         """
                     ))
             if (entry_type == 'books'):
@@ -154,11 +157,7 @@ with engine.begin() as connection:
                     returning id
                     """
                 )).first()
-                random_books = connection.execute(sqlalchemy.text(
-                    f"""
-                    select id from books order by random() limit {num_posts_each}
-                    """
-                ))
+                random_books = random.sample(books, num_posts_each)
                 
                 for book in random_books:
                     date_read = faker.date_this_decade()
@@ -177,7 +176,7 @@ with engine.begin() as connection:
                     connection.execute(sqlalchemy.text(
                         f"""
                         insert into book_entry (entry_id, book_id, date_read, opinion, rating, read_again)
-                        values ({entry.id}, {book.id}, CAST('{date_read}' AS DATE), '{opinion}', {rating}, {read_again})
+                        values ({entry.id}, {book}, CAST('{date_read}' AS DATE), '{opinion}', {rating}, {read_again})
                         """
                     ))
             if (entry_type == 'other'):

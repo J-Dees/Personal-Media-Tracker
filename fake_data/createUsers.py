@@ -14,7 +14,7 @@ engine = sqlalchemy.create_engine(database_connection_url(), use_insertmanyvalue
 
 fake = Faker()
 
-# Generate 1000 unique users with id, name, follower_count
+# Generate 2000 unique users with id, name, follower_count
 num_users = 2_000
 users = []
 follower_mapping = []

@@ -3,6 +3,7 @@ import sqlalchemy
 from src import database as db
 import os
 import re
+import time
 
 router = APIRouter(
     prefix="/admin",
@@ -13,7 +14,7 @@ def parse_csv(file_name: str) -> list[dict]:
     append_dict = []
     root_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     file_path = os.path.join(root_dir, file_name)
-    with open(file_path, "r") as file:
+    with open(file_path, "r", encoding='utf-8') as file:
         header = file.readline().strip().split(',')
         header = [h.strip("'ï»¿'") for h in header]
         header = [h.strip('"') for h in header]
@@ -51,12 +52,18 @@ def reset_db():
     
     return 'OK'
 
-@router.post("/load")
-def load_data():
-    movies = parse_csv("movies_data.csv")
-    with db.engine.begin() as connection:
-        print("Beggining Load...")
-        connection.execute(sqlalchemy.text("INSERT INTO test_movies (id, movie_title, year) VALUES (:id, :movie_title, :year)"), movies)
-        print("Load finished...")
+# @router.post("/load")
+# def load_data():
+#     movies = parse_csv("books_data.csv")
+#     count = 0
+#     with db.engine.begin() as connection:
+#         print("Beggining Load...")
+#         for movie in movies:
+#             print(movie)
+#             count += 1
+#             if (count == 20):
+#                 break
+#             time.sleep(1)
+#         print("Load finished...")
     
-    return 'OK'
+#     return 'OK'
