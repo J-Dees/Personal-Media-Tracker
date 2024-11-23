@@ -277,7 +277,8 @@ def follow_recommendations(user_id: int):
             -- SELECT all following from users that the individual isn't already following. Weight *  
             recommending AS (
               SELECT
-                users.name AS recommendation
+                users.name AS recommendation,
+                sum(total_common) as total_common
               FROM social
               JOIN common_following ON social.user_id = common_following.user
               JOIN users ON users.id = social.following_id
@@ -287,7 +288,7 @@ def follow_recommendations(user_id: int):
               GROUP BY following_id, users.name
               ORDER BY sum(total_common) DESC, users.name 
             )
-            SELECT recommendation FROM recommending
+            SELECT recommendation, total_common FROM recommending
             LIMIT 10
             """), {"user_id": user_id}).mappings().fetchall()
         

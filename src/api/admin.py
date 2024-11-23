@@ -24,7 +24,7 @@ def parse_csv(file_name: str) -> list[dict]:
             line_parts = [line.strip('"') for line in line_parts]
             append_dict.append(
                 {
-                    f"{header[0]}": int(line_parts[0]),
+                    f"id": int(line_parts[0]),
                     f"{header[1]}": f"{line_parts[1]}",
                     f"{header[2]}": int(line_parts[2]) if line_parts[2].isdigit() else f"{line_parts[2]}"
                     
