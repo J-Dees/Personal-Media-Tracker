@@ -98,9 +98,9 @@ with engine.begin() as connection:
                 random_games = random.sample(games, num_posts_each)
                 
                 for game in random_games:
-                    hours_played = round(random.uniform(0, 10),2)
+                    hours_played = random.randint(1, 5000)
                     opinion = faker.text(max_nb_chars=50)
-                    rating = faker.random_number(   )
+                    rating = round(random.uniform(0, 10),2)
                     play_again = faker.boolean()
                     recommend = faker.boolean()
 
