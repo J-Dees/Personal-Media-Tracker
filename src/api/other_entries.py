@@ -1,5 +1,5 @@
 from enum import Enum
-from fastapi import APIRouter
+from fastapi import APIRouter, Response, status
 from pydantic import BaseModel
 import sqlalchemy
 from src import database as db
@@ -154,7 +154,7 @@ class update_other_entries(BaseModel):
     quality: str
 
 @router.put("/{entry_title}")
-def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: update_other_entries):
+def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: update_other_entries, response: Response):
     # update any value of the specified entry
     print(entry_title)
     try:
@@ -199,13 +199,15 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
                     )
                 """
             ), parameters)
+        response.status_code = status.HTTP_202_ACCEPTED
+        return f"Entry '{entry_title}' updated successfully"
 
     except Exception as e:
-        print("Error:", e)
-    return "OK"
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return f"Error: {e}"
 
 @router.delete("/{entry_title}")
-def delete_entry(user_id: int, catalog_name: str, entry_title: str):
+def delete_entry(user_id: int, catalog_name: str, entry_title: str, response: Response):
     # DELETE FROM entries specified title
 
     try:
@@ -243,7 +245,9 @@ def delete_entry(user_id: int, catalog_name: str, entry_title: str):
                     )
                 """
             ), {"entry_title": entry_title, "catalog_id": catalog_id.id})
-    
+        response.status_code = status.HTTP_202_ACCEPTED
+        return f"Entry '{entry_title}' deleted successfully"
+
     except Exception as e:
-        print("Error:",e)
-    return "OK"
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return f"Error: {e}"

@@ -169,7 +169,7 @@ class update_movie_entries(BaseModel):
 
 
 @router.put("/{entry_title}")
-def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: update_movie_entries):
+def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: update_movie_entries, response: Response):
     # update any value of the specified entry
 
     try:
@@ -217,14 +217,15 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
                     )
                 """
             ), parameters)
-    
-    except Exception as e:
-        print("Error:", e)
+        response.status_code = status.HTTP_202_ACCEPTED
+        return f"Entry '{entry_title}' updated successfully"
 
-    return "OK"
+    except Exception as e:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return f"Error: {e}"
 
 @router.delete("/{entry_title}")
-def delete_entry(user_id: int, catalog_name: str, entry_title: str):
+def delete_entry(user_id: int, catalog_name: str, entry_title: str, response: Response):
     # DELETE FROM entries specified title
 
     try:
@@ -263,7 +264,9 @@ def delete_entry(user_id: int, catalog_name: str, entry_title: str):
                     )
                 """
             ), {"entry_title": entry_title, "catalog_id": catalog_id.id})
-    except Exception as e:
-        print("Error:", e)
+        response.status_code = status.HTTP_202_ACCEPTED
+        return f"Entry '{entry_title}' deleted successfully"
 
-    return "OK"
+    except Exception as e:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return f"Error: {e}"

@@ -104,7 +104,7 @@ def get_followees_entries(user_id: int,
                     order_by: entries_sort_col = entries_sort_col.title,
                     direction: asc_desc = asc_desc.asc,
                     return_type: entry_type = entry_type.movies):
-    """Get all recommended entries of a specific catalog from a user you are following"""
+    """Get all entries of a specific catalog from a user you are following"""
 
     #Start to build the stats and content statements generally for any entry type.
     stats_statement = (

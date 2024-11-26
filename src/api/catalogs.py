@@ -56,6 +56,7 @@ def fetch_user_catalogs(response: Response,
         content_statement = content_statement.where(db.catalogs.c.type == type)
         stats_statement = stats_statement.where(db.catalogs.c.type == type)
     
+    response.status_code = status.HTTP_200_OK
     return db.execute_search(stats_statement, content_statement, page)
 
 class catalog_create(BaseModel):
@@ -65,26 +66,29 @@ class catalog_create(BaseModel):
 
 @router.post("")
 def create_catalog(user_id: int, entry: catalog_create, response: Response):
+    """Create a catalog of type book, game, movie, or other; catalog names must be unique per user"""
     # insert into the users catalogs a new catalog with a unqiue catalog id
     # handle error if user enters invalid type
     entry_dict = entry.dict()
     entry_dict.update({"user_id": user_id})
     with db.engine.begin() as connection:
-        exists = connection.execute(sqlalchemy.text("""
-                                              SELECT id 
-                                              FROM catalogs 
-                                              WHERE user_id = :user_id 
-                                              AND name = :name"""), 
-                                              {
-                                                  "user_id": user_id,
-                                                  "name": entry.name
-                                              }).scalar_one_or_none()
+        exists = connection.execute(sqlalchemy.text(
+            """
+            SELECT id 
+            FROM catalogs 
+            WHERE user_id = :user_id AND name = :name"""), 
+            {
+                "user_id": user_id,
+                "name": entry.name
+            }).scalar_one_or_none()
         if exists is None:
-            connection.execute(sqlalchemy.text("""
-                                               INSERT INTO catalogs (user_id, name, type, private) 
-                                               VALUES (:user_id, :name, :type, :private)"""), entry_dict)
+            connection.execute(sqlalchemy.text(
+                """
+                INSERT INTO catalogs (user_id, name, type, private) 
+                VALUES (:user_id, :name, :type, :private)
+                """), entry_dict)
             response.status_code = status.HTTP_201_CREATED
-            return "OK"
+            return f"Catalog with name {entry.name} created"
         else:    
             response.status_code = status.HTTP_403_FORBIDDEN
             return "Catalog name already taken. Please choose another name."
@@ -94,32 +98,53 @@ class catalog_update(BaseModel):
     private: bool
 
 @router.put("/{catalog_id}")
-def update_catalog(user_id: int, catalog_id: int, catalog_update: catalog_update):
+def update_catalog(user_id: int, catalog_id: int, catalog_update: catalog_update, response: Response):
+    """Updates a catalog name and privacy provided a correct user_id-catalog_id pair"""
     # update name/type of catalog with catalog id passed by user
     
     catalog_update_dict =  catalog_update.dict()
     catalog_update_dict.update({"user_id": user_id,
                                 "id": catalog_id})
-    with db.engine.begin() as connection:
-            connection.execute(sqlalchemy.text("""UPDATE catalogs
-                                           SET name = :name,
-                                               private = :private
-                                           WHERE user_id = :user_id 
-                                           AND id = :id"""), catalog_update_dict)
-    
-    return "OK"
+    try:
+        with db.engine.begin() as connection:
+            connection.execute(sqlalchemy.text(
+                """
+                UPDATE catalogs
+                SET name = :name, private = :private
+                WHERE (user_id, id) = (
+                    SELECT user_id, id
+                    FROM catalogs
+                    WHERE user_id = :user_id AND id = :id)
+                """), catalog_update_dict)
+        response.status_code = status.HTTP_202_ACCEPTED
+        return f"Catalog {catalog_id} updated to {catalog_update}"
+    except:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return f"Unable to access catalog {catalog_id}"
+
 
 @router.delete("/{catalog_id}")
-def delete_catalog(user_id: int, catalog_id: int):
-    # DELETE FROM catalog where catalog id = id passed by user
-
+def delete_catalog(user_id: int, catalog_id: int, response: Response):
+    """Deletes a catalog and all of its entries provided a valid user_id-catalog_id pair"""
     entry = {
         "user_id": user_id,
         "id": catalog_id
     }
-    with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text(""" 
-                                           DELETE FROM catalogs 
-                                           WHERE user_id = :user_id AND id = :id"""), entry)
-    
-    return "OK"
+    try:
+        with db.engine.begin() as connection:
+            catalog = connection.execute(sqlalchemy.text(
+                """ 
+                SELECT user_id, id
+                FROM catalogs
+                WHERE user_id = :user_id AND id = :id
+                """), entry).one()
+            connection.execute(sqlalchemy.text(
+                """
+                DELETE FROM catalogs
+                WHERE (user_id, id) = (:user_id, :id)
+                """), {'user_id': catalog.user_id, 'id': catalog.id})
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return f"Catalog {catalog_id} successfully deleted"
+    except:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return f"Unable to access catalog {catalog_id}"
