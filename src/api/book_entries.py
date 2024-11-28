@@ -130,12 +130,15 @@ def create_entry(user_id: int, catalog_name: str, entry: book_entries, response:
 
     try:
         if (not catalog_belongs_to_user(user_id, catalog_name)):
+            response.status_code = status.HTTP_400_BAD_REQUEST
             raise Exception("Catalog does not belong to user.")
 
         if (entry_exists(user_id, catalog_name, entry.title)):
+            response.status_code = status.HTTP_400_BAD_REQUEST
             raise Exception("Entry already exists.")
         
         if (not book_doesnt_exist(entry.title, entry.author)):
+            response.status_code = status.HTTP_400_BAD_REQUEST
             raise Exception("No Book matches that title and author.")
         
         with db.engine.begin() as connection:
@@ -171,7 +174,7 @@ def create_entry(user_id: int, catalog_name: str, entry: book_entries, response:
     
     except Exception as e:
         response.status_code = status.HTTP_404_NOT_FOUND
-        return str(e)
+        return "Failed to create entry"
 
     return "OK"
 
@@ -188,9 +191,11 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
 
     try:
         if (not catalog_belongs_to_user(user_id, catalog_name)):
+            response.status_code = status.HTTP_400_BAD_REQUEST
             raise Exception("Catalog does not belong to user.")
 
         if (not entry_exists(user_id, catalog_name, entry_title)):
+            response.status_code = status.HTTP_400_BAD_REQUEST
             raise Exception("Entry does not exist.")
 
         with db.engine.begin() as connection:
@@ -244,9 +249,11 @@ def delete_entry(user_id: int, catalog_name: str, entry_title: str, response: Re
 
     try:
         if (not catalog_belongs_to_user(user_id, catalog_name)):
+            response.status_code = status.HTTP_400_BAD_REQUEST
             raise Exception("Catalog does not belong to user.")
         
         if (not entry_exists(user_id, catalog_name, entry_title)):
+            response.status_code = status.HTTP_400_BAD_REQUEST
             raise Exception("Entry does not exist.")
 
         with db.engine.begin() as connection:
