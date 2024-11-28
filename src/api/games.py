@@ -20,8 +20,10 @@ class sort_col_games(str, Enum):
 def search_games(page: int = 1, game_title: str = "", year: int = None, sort_col: sort_col_games = sort_col_games.game_title):
     """
     Search the games database.
-    - game_title only needs to be contained within an actual title.
-    - year must be the exact date of release.
+    - page: The page of results to return.
+    - game_title: A String that each game_title returned must contain.
+    - year: must be the exact year of release.
+    - sort_col: Specifies a value to sort the results by. 
     """
     #Search books for a book that contains a str sequence in the title and a str sequence in the auhtor.
     #Search gives results in pages with length MAX_PER_PAGE.

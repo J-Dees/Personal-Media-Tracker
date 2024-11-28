@@ -20,8 +20,10 @@ class sort_col_books(str, Enum):
 def search_books(page: int = 1, book_title: str = "", author: str = "", sort_col: sort_col_books = sort_col_books.book_title):
     """
     Search the books database.
-    - book_title only needs to be contained within an actual title.
-    - author only needs to be part of the whole author's name.
+    - page: The page of results to return.
+    - book_title: A String that each book_title returned must contain.
+    - Author: A String that each author returned must contain.
+    - sort_col: Specifies a value to sort the results by. 
     """
     #Search books for a book that contains a str sequence in the title and a str sequence in the auhtor.
     #Search gives results in pages with length MAX_PER_PAGE.

@@ -36,7 +36,12 @@ def entry_search(user_id: int,
                  opinion: str = "",
                  order_by: entries_order_by = entries_order_by.title,
                  direction: asc_desc = asc_desc.asc):
-    """Search a specific catalog's game_entries"""
+    """Search one of your catalog's other_entries. Note that the catalog must be of the other type.
+        - catalog_name: A String that must match an exact catalog_name of yours.
+        - page: The page of results to return.
+        - opinion: A String that each entry returned must contain.
+        - order_by: Specifies a value to sort the results by. 
+        - direction: The sort order of the results in either `asc` or `desc` order."""
     # find a specific entry in the current catalog with the given query
     stats_statement = (
         sqlalchemy.select(
@@ -100,7 +105,14 @@ def entry_exists(user_id: int, catalog_name: str, entry_title: str) -> bool:
 @router.post("")
 def create_other_entry(user_id: int, catalog_name: str, entry: other_entries):
     '''
-    
+    Cretes a new other_entry in the catalog catalg_name.\\ 
+    The entry must not already exist and the catalog must be of the Type 'other'
+        - title: Must be a unique title to the catalog.
+        - description: A string describing the entry.
+        - quality: A string describing quality (Note: can still be a numaric 0-10) 
+        - date_obtained: The date the entry was made or item obtained. Must be of the form "YYYY-MM-DD".
+        - recommend: A boolean ('true' or 'false') on whether you would recommend the entry to another person.
+        - private: A boolean ('true' or 'false') on if you want others to see this entry.
     '''
     # insert into catalog table a new row with unqiue catalog id
     # do we want this to have a composite key for userid, catalog id, and entry id (ie user 1 catalog 1 entry 1, user 2 catalog 1 entry 1 etc)
@@ -155,6 +167,8 @@ class update_other_entries(BaseModel):
 
 @router.put("/{entry_title}")
 def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: update_other_entries, response: Response):
+    """Given a existing tuple of user_id, catalog_name, and entry_title you can update the values of that entry.\\
+        Note that date_obtained must be of the form \"YYYY-MM-DD\""""
     # update any value of the specified entry
     print(entry_title)
     try:
@@ -208,6 +222,7 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
 
 @router.delete("/{entry_title}")
 def delete_entry(user_id: int, catalog_name: str, entry_title: str, response: Response):
+    """Given a existing tuple of user_id, catalog_name, and entry_title you can delete the entry."""
     # DELETE FROM entries specified title
 
     try:

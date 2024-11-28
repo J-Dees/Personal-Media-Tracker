@@ -29,7 +29,11 @@ def fetch_user_catalogs(response: Response,
                     type: catalog_type = catalog_type.any, 
                     order_by: catalog_order_by = catalog_order_by.name, 
                     direction: asc_desc = asc_desc.asc):
-    '''Search a user's list of catalogs. Default will search the entire catalog ordered by name.'''
+    '''Search your list of catalogs. Default will search the entire catalog ordered by name.
+        - page: The page of results to return.
+        - type: Narrows search to only catalogs of a specific type of entry.
+        - order_by: Specifies a value to sort the results by. 
+        - direction: The sort order of the results in either `asc` or `desc` order.'''
     #Statement for gathering how many rows will be returned.
     stats_statement = (
         sqlalchemy.select(
@@ -66,7 +70,10 @@ class catalog_create(BaseModel):
 
 @router.post("")
 def create_catalog(user_id: int, entry: catalog_create, response: Response):
-    """Create a catalog of type book, game, movie, or other; catalog names must be unique per user"""
+    """Create a catalog. 
+        - name: Catalog names must be unique to the user.
+        - type: Type must be one of the following values 'books', 'movies', 'games', or 'other'.
+        - private: Must be either 'true' or 'false'. 'true' will not allow anyone except you to view the catalog."""
     # insert into the users catalogs a new catalog with a unqiue catalog id
     # handle error if user enters invalid type
     entry_dict = entry.dict()
@@ -97,14 +104,15 @@ class catalog_update(BaseModel):
     name: str
     private: bool
 
-@router.put("/{catalog_id}")
-def update_catalog(user_id: int, catalog_id: int, catalog_update: catalog_update, response: Response):
-    """Updates a catalog name and privacy provided a correct user_id-catalog_id pair"""
+@router.put("/{catalog_name}")
+def update_catalog(user_id: int, catalog_name: str, catalog_update: catalog_update, response: Response):
+    """Updates a catalog name and privacy.
+        - You must provide a correct user_id and catalog_name pair."""
     # update name/type of catalog with catalog id passed by user
     
     catalog_update_dict =  catalog_update.dict()
     catalog_update_dict.update({"user_id": user_id,
-                                "id": catalog_id})
+                                "name": catalog_name})
     try:
         with db.engine.begin() as connection:
             connection.execute(sqlalchemy.text(
@@ -114,21 +122,22 @@ def update_catalog(user_id: int, catalog_id: int, catalog_update: catalog_update
                 WHERE (user_id, id) = (
                     SELECT user_id, id
                     FROM catalogs
-                    WHERE user_id = :user_id AND id = :id)
+                    WHERE user_id = :user_id AND name = :name)
                 """), catalog_update_dict)
         response.status_code = status.HTTP_202_ACCEPTED
-        return f"Catalog {catalog_id} updated to {catalog_update}"
+        return f"Catalog {catalog_name} updated to {catalog_update}"
     except:
         response.status_code = status.HTTP_401_UNAUTHORIZED
-        return f"Unable to access catalog {catalog_id}"
+        return f"Unable to access catalog {catalog_name}"
 
 
-@router.delete("/{catalog_id}")
-def delete_catalog(user_id: int, catalog_id: int, response: Response):
-    """Deletes a catalog and all of its entries provided a valid user_id-catalog_id pair"""
+@router.delete("/{catalog_name}")
+def delete_catalog(user_id: int, catalog_name: str, response: Response):
+    """Deletes a catalog and all of its entries.
+        - You must provide a valid user_id and catalog_name pair."""
     entry = {
         "user_id": user_id,
-        "id": catalog_id
+        "name": catalog_name
     }
     try:
         with db.engine.begin() as connection:
@@ -136,7 +145,7 @@ def delete_catalog(user_id: int, catalog_id: int, response: Response):
                 """ 
                 SELECT user_id, id
                 FROM catalogs
-                WHERE user_id = :user_id AND id = :id
+                WHERE user_id = :user_id AND name = :name
                 """), entry).one()
             connection.execute(sqlalchemy.text(
                 """
@@ -144,7 +153,7 @@ def delete_catalog(user_id: int, catalog_id: int, response: Response):
                 WHERE (user_id, id) = (:user_id, :id)
                 """), {'user_id': catalog.user_id, 'id': catalog.id})
         response.status_code = status.HTTP_204_NO_CONTENT
-        return f"Catalog {catalog_id} successfully deleted"
+        return f"Catalog {catalog_name} successfully deleted"
     except:
         response.status_code = status.HTTP_401_UNAUTHORIZED
-        return f"Unable to access catalog {catalog_id}"
+        return f"Unable to access catalog {catalog_name}"

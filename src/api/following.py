@@ -26,7 +26,10 @@ def get_following(user_id: int,
                   name: str = "",
                   direction: asc_desc = asc_desc.asc,
                   page: int = 1):
-    """Return a list of all users that you are following"""
+    """Return a list of all users that you are following fitting the query parameters. Default is all users.
+        - name: A String that each name returned must contain.
+        - direction: The sort order of the results in either `asc` or `desc` order.
+        - page: The page of results to return."""
     stats_statement = (
         sqlalchemy.select(
             sqlalchemy.func.count(db.social.c.following_id).label("total_rows"))
@@ -59,7 +62,11 @@ def view_followees_catalogs(user_id:int ,
                             catalog_name: str = "",
                             direction: asc_desc = asc_desc.asc,
                             page: int = 1):
-    """View all public catalogs of a specific user that you are following """
+    """View all public catalogs of those you are following fitting the query parameters.
+        - name: A String that each followee's name returned must contain.
+        - catalog_name: A String that each catalog_name returned must contain.
+        - direction: The sort order of the results in either `asc` or `desc` order.
+        - page: The page of results to return."""
     stats_statement = (
         sqlalchemy.select(
             sqlalchemy.func.count(db.social.c.following_id).label("total_rows"))
@@ -104,7 +111,15 @@ def get_followees_entries(user_id: int,
                     order_by: entries_sort_col = entries_sort_col.title,
                     direction: asc_desc = asc_desc.asc,
                     return_type: entry_type = entry_type.movies):
-    """Get all entries of a specific catalog from a user you are following"""
+    """View all public catalog entries of followee's based on query parameters.
+        - page: The page of results to return.
+        - following_name: A String that each followee's name returned must contain.
+        - catalog: A String that each catalog returned must contain.
+        - title: A String that each entry title must contain.
+        - recommend: A boolean when true will return only entries that are marked as recommended. When false all entries will be returned.
+        - order_by: Specifies a value to sort the results by. 
+        - direction: The sort order of the results in either `asc` or `desc` order.
+        - return_type: Each search can only return entries of one type ('movies', 'books', 'games', 'other'). """
 
     #Start to build the stats and content statements generally for any entry type.
     stats_statement = (
@@ -252,7 +267,8 @@ def get_followees_entries(user_id: int,
 
 @router.get("/follow-recommendations")
 def follow_recommendations(user_id: int):
-    """Gets recommended users to follow."""
+    """Gets recommended users to follow.
+        - If you are not currently following anyone, then a list of the top 10 most followed users will be recommended."""
     with db.engine.begin() as connection:
 
         result = connection.execute(sqlalchemy.text(
@@ -313,7 +329,9 @@ def follow_recommendations(user_id: int):
 
 @router.post("")
 def follow_user(user_id: int, user_name: str, response: Response):
-    """Follow a user by their username"""
+    """Follow a user by their username.
+        - user_id: Is your user.
+        - user_name: Is the name of the user you wish to follow."""
     following_id = None
     # outer: try to follow user, if username is not recognized in users table throw 404 response
     try:
@@ -363,7 +381,8 @@ def follow_user(user_id: int, user_name: str, response: Response):
 
 @router.delete("/{user_name}")
 def unfollow_user(user_id: int, user_name: str, response: Response):
-    """Remove user from list of people to follow by username"""
+    """Remove user from list of people to follow by username.
+        - user_name: The name of the user you wish to remove from your following list."""
     try:
         with db.engine.begin() as connection:
                 # check if user in follow list

@@ -11,7 +11,8 @@ router = APIRouter(
 
 @router.post("")
 def create_new_user(name, response: Response):
-    '''Creates a new user with the passed name and assigns a unique ID. If the user name is taken, the new user is informed to pick a different name.'''
+    '''Creates a new user with the passed name and assigns a unique ID.\\
+    The username must be a unique name.'''
     with db.engine.begin() as connection:
         try:
             connection.execute(sqlalchemy.text(
@@ -33,7 +34,10 @@ class asc_desc(str, Enum):
 def get_users(page: int = 1, 
               name: str = "",
               direction: asc_desc = asc_desc.asc):
-    """Lists all users"""
+    """Lists all users fitting the query parameters.
+        - page: The page of results to return.
+        - name: A String that each name returned must contain.
+        - direction: The sort order of the results in either `asc` or `desc` order."""
     stats_statement = (
         sqlalchemy.select(
             sqlalchemy.func.count(db.users.c.id).label("total_rows"))
@@ -59,7 +63,9 @@ def get_users(page: int = 1,
 
 @router.get("/{user_name}")
 def login_user(name, response: Response):
-    '''Allows the user to login with their username. If no such user exists, a message is sent to inform that no user exists by that name.'''
+    '''Allows the user to login with their username. 
+        - The username must exist.
+        - The returned user_id will be used as authentication to modify anything related to the user.'''
     with db.engine.begin() as connection:
         try:
             user_id = connection.execute(sqlalchemy.text(
@@ -77,7 +83,8 @@ def login_user(name, response: Response):
 
 @router.delete("/{user_id}")
 def delete_user(user_id, response: Response):
-    '''Deletes a user account. This will remove all traces of the user including catalogs, entries, and followers.'''
+    '''Deletes a user account. 
+        - This will remove all traces of the user including catalogs, entries, and followers.'''
     # API Spec notes that user will receive a warning prior to deletion
     try:
         with db.engine.begin() as connection:
