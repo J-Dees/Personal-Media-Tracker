@@ -37,7 +37,12 @@ def entry_search(user_id: int,
                  opinion: str = "",
                  order_by: entries_order_by = entries_order_by.game_title,
                  direction: asc_desc = asc_desc.asc):
-    """Search a specific catalog's game_entries"""
+    """Search one of your catalog's game_entries. Note that the catalog must be of the game type.
+        - catalog_name: A String that must match an exact catalog_name of yours.
+        - page: The page of results to return.
+        - opinion: A String that each entry returned must contain.
+        - order_by: Specifies a value to sort the results by. 
+        - direction: The sort order of the results in either `asc` or `desc` order."""
     # find a specific entry in the current catalog with the given query
     stats_statement = (
         sqlalchemy.select(
@@ -110,8 +115,16 @@ def game_doesnt_exist(title: str, year: int) -> bool:
 @router.post("")
 def create_game_entry(user_id: int, catalog_name: str, entry: game_entries, response: Response):
     '''
-    Creates a new entry for the user in a catalog.
-    Does not accept duplicate entry titles
+    Cretes a new game_entry in the catalog catalg_name.\\ 
+    The entry must not already exist and the catalog must be of the Type 'games'
+        - title: Must exactly match a title found in the games database.
+        - year: Must exactly match the year attached to the title find in the games database.
+        - opinion: A string stating your opinions on the game.
+        - rating: A rating of 0-10 inclusive.
+        - hours_played: An approximate amount of hours playing a game.
+        - play_again: A boolean ('true' or 'false') on whether you would play the game again.
+        - recommend: A boolean ('true' or 'false') on whether you would recommend the game to another.
+        - private: A boolean ('true' or 'false') on if you want others to see this entry.
     '''
     # insert into catalog table a new row with unqiue catalog id
     # do we want this to have a composite key for userid, catalog id, and entry id (ie user 1 catalog 1 entry 1, user 2 catalog 1 entry 1 etc)
@@ -174,6 +187,7 @@ class update_game_entries(BaseModel):
     
 @router.put("/{entry_title}")
 def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: update_game_entries, response: Response):
+    """Given a existing tuple of user_id, catalog_name, and entry_title you can update the values of that entry."""
     # update any value of the specified entry
 
     try:
@@ -230,6 +244,7 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
 
 @router.delete("/{entry_title}")
 def delete_entry(user_id: int, catalog_name: str, entry_title: str, response: Response):
+    """Given a existing tuple of user_id, catalog_name, and entry_title you can delete the entry."""
     # DELETE FROM entries specified title
 
     try:
