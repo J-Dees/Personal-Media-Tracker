@@ -21,35 +21,6 @@ class book_entries(BaseModel):
     recommend: bool
     private: bool
 
-def catalog_belongs_to_user(user_id: int, catalog_name: str) -> bool:
-    with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(
-            """
-            SELECT
-                verify_catalog_belongs_user(:catalog_name, :user_id) as verified
-            """
-        ), {"catalog_name": catalog_name, "user_id": user_id}).first()
-
-    return result.verified
-
-def entry_exists(user_id: int, catalog_name: str, entry_title: str) -> bool:
-    with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(
-            """
-            SELECT check_entry_exists(:catalog_name, :user_id, :entry_title) as verified
-            """
-        ), {"catalog_name": catalog_name, "user_id": user_id, "entry_title": entry_title}).first()
-    return result.verified
-
-def book_doesnt_exist(title: str, author: str) -> bool:
-    with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(
-            """
-            SELECT check_book_exists(:title, :author) as verified
-            """
-        ), {"title": title, "author": author}).first()
-    return result.verified
-
 class entries_order_by(str, Enum):
     book_title = "book_title"
     date_read = "date_read"
@@ -128,20 +99,20 @@ def create_entry(user_id: int, catalog_name: str, entry: book_entries, response:
     # insert into catalog table a new row with unqiue catalog id
     # do we want this to have a composite key for userid, catalog id, and entry id (ie user 1 catalog 1 entry 1, user 2 catalog 1 entry 1 etc)
 
-    try:
-        if (not catalog_belongs_to_user(user_id, catalog_name)):
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            raise Exception("Catalog does not belong to user.")
-
-        if (entry_exists(user_id, catalog_name, entry.title)):
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            raise Exception("Entry already exists.")
-        
-        if (not book_doesnt_exist(entry.title, entry.author)):
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            raise Exception("No Book matches that title and author.")
-        
+    try:        
         with db.engine.begin() as connection:
+            # Checks if:
+            # 1. catalog belongs to user
+            # 2. entry is already in catalog
+            # 3. entry is in database
+            # Raises exception if there are any conflicts
+            connection.execute(sqlalchemy.text(
+                """
+                select post_checks(:user_id, :catalog_name, 'books', :entry_title, :entry_year)
+                """
+            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_title": entry.title, "entry_year": entry.year})
+
+
             entry_id = connection.execute(sqlalchemy.text(
                 """
                 INSERT INTO
@@ -190,15 +161,17 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
     # update any value of the specified entry
 
     try:
-        if (not catalog_belongs_to_user(user_id, catalog_name)):
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            raise Exception("Catalog does not belong to user.")
-
-        if (not entry_exists(user_id, catalog_name, entry_title)):
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            raise Exception("Entry does not exist.")
-
         with db.engine.begin() as connection:
+            # Checks if:
+            # 1. Catalog belongs to user
+            # 2. Entry is in catalog
+            # Raises exception if there are any conflicts
+            connection.execute(sqlalchemy.text(
+                """
+                select put_delete_checks(:user_id, :catalog_name, 'books', :entry_title)
+                """
+            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_title": entry_title})
+
 
             # Get catalog id
             catalog_id = connection.execute(sqlalchemy.text(
@@ -248,15 +221,18 @@ def delete_entry(user_id: int, catalog_name: str, entry_title: str, response: Re
     # DELETE FROM entries specified title
 
     try:
-        if (not catalog_belongs_to_user(user_id, catalog_name)):
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            raise Exception("Catalog does not belong to user.")
-        
-        if (not entry_exists(user_id, catalog_name, entry_title)):
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            raise Exception("Entry does not exist.")
-
         with db.engine.begin() as connection:
+            # Checks if:
+            # 1. Catalog belongs to user
+            # 2. Entry is in catalog
+            # Raises exception if there are any conflicts
+            connection.execute(sqlalchemy.text(
+                """
+                select put_delete_checks(:user_id, :catalog_name, 'books', :entry_title)
+                """
+            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_title": entry_title})
+
+
             # Get catalog id
             catalog_id = connection.execute(sqlalchemy.text(
                 """
