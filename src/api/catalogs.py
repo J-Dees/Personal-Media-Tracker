@@ -79,15 +79,24 @@ def create_catalog(user_id: int, entry: catalog_create, response: Response):
     entry_dict = entry.dict()
     entry_dict.update({"user_id": user_id})
     with db.engine.begin() as connection:
+        # Enforces catalog_name/catalog_type uniqueness per user.
         exists = connection.execute(sqlalchemy.text(
             """
-            SELECT id 
-            FROM catalogs 
-            WHERE user_id = :user_id AND name = :name"""), 
+            SELECT 
+                id 
+            FROM 
+                catalogs 
+            WHERE 
+                user_id = :user_id AND 
+                name = :name AND
+                type = :type
+            """), 
             {
                 "user_id": user_id,
-                "name": entry.name
+                "name": entry.name,
+                "type": entry.type
             }).scalar_one_or_none()
+        
         if exists is None:
             connection.execute(sqlalchemy.text(
                 """
@@ -98,7 +107,7 @@ def create_catalog(user_id: int, entry: catalog_create, response: Response):
             return f"Catalog with name {entry.name} created"
         else:    
             response.status_code = status.HTTP_403_FORBIDDEN
-            return "Catalog name already taken. Please choose another name."
+            return f"User already has catalog of type {entry.type} with name {entry.name}. Please choose another name."
 
 class catalog_update(BaseModel):
     name: str
