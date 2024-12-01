@@ -149,12 +149,10 @@ def get_followees_entries(user_id: int,
         .where(db.social.c.user_id == user_id)
         .where(db.users.c.name.ilike(f"%{following_name}%"))
         .where(db.catalogs.c.name.ilike(f"%{catalog}%"))
+                                                                 #if recommend==false then we want all results not just the not recommended ones.
+        .where(db.entries.c.recommend == sqlalchemy.func.coalesce(recommend if recommend == True else None, db.entries.c.recommend)) 
         .limit(db.MAX_PER_PAGE).offset(db.MAX_PER_PAGE*(page-1))
     )
-    #only limit results to recommended if recommend is true.
-    if (recommend):
-        content_statement = content_statement.where(db.entries.c.recommend == recommend)
-        stats_statement = stats_statement.where(db.entries.c.recommend == recommend)
 
     #specialize the stats and content statements for a specific entry type.
     if (return_type == entry_type.movies):
@@ -179,10 +177,6 @@ def get_followees_entries(user_id: int,
             .where(db.catalogs.c.type == "movies")
             .where(db.movies.c.movie_title.ilike(f"%{title}%"))
         )
-        if (direction == "desc"):
-            content_statement = content_statement.order_by(sqlalchemy.desc(sort_col.get(order_by)))
-        else:
-            content_statement = content_statement.order_by(sort_col.get(order_by))
 
     elif (return_type == entry_type.books):
         sort_col = {"title": "book_title", "rating": "rating", "date": "date_read"}
@@ -206,10 +200,6 @@ def get_followees_entries(user_id: int,
             .where(db.catalogs.c.type == "books")
             .where(db.books.c.book_title.ilike(f"%{title}%"))
         )
-        if (direction == "desc"):
-            content_statement = content_statement.order_by(sqlalchemy.desc(sort_col.get(order_by)))
-        else:
-            content_statement = content_statement.order_by(sort_col.get(order_by))
 
     elif (return_type == entry_type.games):
         sort_col = {"title": "game_title", "rating": "rating", "date": "hours_played"}
@@ -233,10 +223,6 @@ def get_followees_entries(user_id: int,
             .where(db.catalogs.c.type == "games")
             .where(db.games.c.game_title.ilike(f"%{title}%"))
         )
-        if (direction == "desc"):
-            content_statement = content_statement.order_by(sqlalchemy.desc(sort_col.get(order_by)))
-        else:
-            content_statement = content_statement.order_by(sort_col.get(order_by))
 
     else:#return_type is other
         sort_col = {"title": "title", "rating": "quality", "date": "date_obtained"}
@@ -258,10 +244,11 @@ def get_followees_entries(user_id: int,
             .where(db.catalogs.c.type == "other")
             .where(db.other_entry.c.title.ilike(f"%{title}%"))
         )
-        if (direction == "desc"):
-            content_statement = content_statement.order_by(sqlalchemy.desc(sort_col.get(order_by)))
-        else:
-            content_statement = content_statement.order_by(sort_col.get(order_by))
+
+    if (direction == "desc"):
+        content_statement = content_statement.order_by(sqlalchemy.desc(sort_col.get(order_by)))
+    else:
+        content_statement = content_statement.order_by(sort_col.get(order_by))
     
     return db.execute_search(stats_statement, content_statement, page)
 

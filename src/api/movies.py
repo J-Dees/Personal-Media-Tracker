@@ -33,6 +33,7 @@ def search_movies(page: int = 1, movie_title: str = "", year: int = None, sort_c
             sqlalchemy.func.count(db.movies.c.id).label("total_rows")
         )
         .where(db.movies.c.movie_title.ilike(f'%{movie_title}%'))
+        .where(db.movies.c.year == sqlalchemy.func.coalesce(year, db.movies.c.year)) 
     )
     #Create a content query that will collect all needed information from the search.
     content_statement = (
@@ -40,12 +41,9 @@ def search_movies(page: int = 1, movie_title: str = "", year: int = None, sort_c
             db.movies.c.movie_title,
             db.movies.c.year)
         .where(db.movies.c.movie_title.ilike(f"%{movie_title}%"))
+        .where(db.movies.c.year == sqlalchemy.func.coalesce(year, db.movies.c.year)) 
         .limit(db.MAX_PER_PAGE).offset(db.MAX_PER_PAGE*(page-1))
         .order_by(sort_col)
     )
-
-    if year != None: #only searach by year if one is given.
-        stats_statement = stats_statement.where(db.movies.c.year == year)
-        content_statement = content_statement.where(db.movies.c.year == year)
 
     return db.execute_search(stats_statement, content_statement, page)
