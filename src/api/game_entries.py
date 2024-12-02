@@ -175,6 +175,7 @@ def create_game_entry(user_id: int, catalog_name: str, entry: game_entries, resp
             })
 
     except Exception as e:
+        print(e)
         response.status_code = status.HTTP_400_BAD_REQUEST
         return "Incorrect Catalog type. Catalog type not 'games'."
 

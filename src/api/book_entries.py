@@ -180,10 +180,11 @@ def create_entry(user_id: int, catalog_name: str, entry: book_entries, response:
             })
     
     except Exception as e:
+        print(e)
         response.status_code = status.HTTP_400_BAD_REQUEST
         return "Incorrect Catalog type. Catalog type not 'books'."
 
-    return "OK"
+    return "Successfully inserted book into catalog."
 
 class update_book_entries(BaseModel):
     opinion: str
