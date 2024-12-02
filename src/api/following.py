@@ -370,41 +370,31 @@ def follow_user(user_id: int, user_name: str, response: Response):
 def unfollow_user(user_id: int, user_name: str, response: Response):
     """Remove user from list of people to follow by username.
         - user_name: The name of the user you wish to remove from your following list."""
-    try:
-        with db.engine.begin() as connection:
-                # check if user in follow list
-                check = connection.execute(sqlalchemy.text(
-                    """
-                    SELECT following_id
-                    FROM social
-                    WHERE user_id = :user AND following_id = (
-                        SELECT id
-                        FROM users
-                        WHERE name = :user_name
-                        );
-                    """),
-                    {
-                        'user_name': user_name,
-                        'user': user_id,
-                    }
-                ).one()
-                connection.execute(sqlalchemy.text(
-                    """
-                    DELETE FROM social
-                    WHERE user_id = :user AND following_id = (
-                        SELECT id
-                        FROM users
-                        WHERE name = :user_name
-                        )
-                    """
-                ),
-                    {
-                        'user_name': user_name,
-                        'user': user_id,
-                    }
+    with db.engine.begin() as connection:
+        results = connection.execute(sqlalchemy.text(
+            """
+            DELETE FROM social
+            WHERE user_id = :user AND following_id = (
+                SELECT id
+                FROM users
+                WHERE name = :user_name
                 )
-        response.status_code = status.HTTP_204_NO_CONTENT
-        return "User successfully removed from people you follow."
-    except:
+            """
+        ),
+            {
+                'user_name': user_name,
+                'user': user_id,
+            }
+        )
+    # Nothing was removed then bad.
+    if results.rowcount == 0:
         response.status_code = status.HTTP_404_NOT_FOUND
         return "User by the requested name not found in list of people you follow."
+    # One item was removed then good.
+    elif results.rowcount == 1:
+        response.status_code = status.HTTP_200_OK
+        return "User successfully removed from people you follow."
+    # Multiple removed items. Should never happen since you can only follow each person once and not remove multiple people at a time.
+    else:
+        response.status_code = status.HTTP_501_NOT_IMPLEMENTED
+        return "Multiple users successfully removed from people you follow. SHOULD NOT HAPPEN."
