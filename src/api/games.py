@@ -46,4 +46,10 @@ def search_games(page: int = 1, game_title: str = "", year: int = None, sort_col
         .limit(db.MAX_PER_PAGE).offset(db.MAX_PER_PAGE*(page-1))
         .order_by(sort_col)
     )
+
+    #Break ties by the order of sort_col_games.
+    for item in sort_col_games:
+        if item.value != sort_col:
+            content_statement = content_statement.order_by(item)
+
     return db.execute_search(stats_statement, content_statement, page)

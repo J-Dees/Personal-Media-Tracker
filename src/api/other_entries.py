@@ -79,6 +79,11 @@ def entry_search(user_id: int,
     else:
         content_statement = content_statement.order_by(order_by)
 
+    #Break ties by the order of entries_order_by.
+    for item in entries_order_by:
+        if item.value != order_by:
+            content_statement = content_statement.order_by(item)
+
     return db.execute_search(stats_statement, content_statement, page)
 
 def catalog_belongs_to_user(user_id: int, catalog_name: str) -> bool:
@@ -159,7 +164,7 @@ def create_other_entry(user_id: int, catalog_name: str, entry: other_entries, re
             })
     
     except Exception as e:
-        print("Error:", e)
+        print(e)
         response.status_code = status.HTTP_400_BAD_REQUEST
         return "Incorrect Catalog type. Catalog type not 'other'."
 

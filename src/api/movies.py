@@ -46,4 +46,9 @@ def search_movies(page: int = 1, movie_title: str = "", year: int = None, sort_c
         .order_by(sort_col)
     )
 
+    #Break ties by the order of sort_col_movies.
+    for item in sort_col_movies:
+        if item.value != sort_col:
+            content_statement = content_statement.order_by(item)
+
     return db.execute_search(stats_statement, content_statement, page)
