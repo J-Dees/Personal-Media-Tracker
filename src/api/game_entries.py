@@ -107,11 +107,23 @@ def create_game_entry(user_id: int, catalog_name: str, entry: game_entries, resp
             # 2. entry is already in catalog
             # 3. entry is in database
             # Raises exception if there are any conflicts
-            connection.execute(sqlalchemy.text(
+            valid_request = connection.execute(sqlalchemy.text(
                 """
-                select post_checks(:user_id, :catalog_name, 'games', :entry_title, :entry_year)
+                select 
+                    check_catalog_user_relationship(:user_id, :catalog_name, 'games') as catalog_user_relationship,
+                    check_entry_in_catalog(:user_id, :catalog_name, 'games', :entry_name) as entry_in_catalog,
+                    check_game_entry_exists(:entry_name, :entry_year) as entry_exists
                 """
-            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_title": entry.title, "entry_year": entry.year})
+            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_name": entry.title, "entry_year": entry.year}).first()
+
+            if (not valid_request.catalog_user_relationship) :
+                raise Exception("Catalog does not belong to user.")
+            
+            if (valid_request.entry_in_catalog):
+                raise Exception("Entry already exists in catalog.")
+            
+            if (not valid_request.entry_exists) :
+                raise Exception("No book matches that title and author")
 
 
             entry_id = connection.execute(sqlalchemy.text(

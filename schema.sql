@@ -149,182 +149,50 @@ begin
 end;
 $$ language plpgsql;
 
-create function check_entry_in_catalog(user_id INT, catalog_name TEXT, catalog_type entry_types, entry_name TEXT)
+create function check_game_entry_exists(entry_name TEXT, entry_year INT)
 returns boolean as $$
 declare
   result bool := false;
 begin
-  
-  -- Find entry given catalog information for each catalog_type
-  case catalog_type
-    when 'games' then
-      select exists (
-        select 1 from
-        catalogs
-        join 
-          entries on catalogs.id = entries.catalog_id
-        join 
-          game_entry as ge on entries.id = ge.entry_id
-        join 
-          games on games.id = ge.game_id
-        where 
-          catalogs.user_id = $1 and
-          catalogs.name = catalog_name and
-          games.game_title = entry_name
-      ) into result;
-
-    when 'movies' then
-      select exists (
-        select 1 from
-        catalogs
-        join 
-          entries on catalogs.id = entries.catalog_id
-        join 
-          movie_entry as me on entries.id = me.entry_id
-        join 
-          movies on movies.id = me.movie_id
-        where 
-          catalogs.user_id = $1 and
-          catalogs.name = catalog_name and
-          movies.movie_title = entry_name
-      ) into result;
-
-    when 'books' then
-      select exists (
-        select 1 from
-        catalogs
-        join 
-          entries on catalogs.id = entries.catalog_id
-        join 
-          book_entry as be on entries.id = be.entry_id
-        join 
-          books on books.id = be.book_id
-        where 
-          catalogs.user_id = $1 and
-          catalogs.name = catalog_name and
-          books.book_title = entry_name
-      ) into result;
-    
-    when 'other' then
-      select exists (
-        select 1 from catalogs
-        join
-          entries on catalogs.id = entries.catalog_id
-        join
-          other_entry as oe on entries.id = oe.entry_id
-        where
-          catalogs.user_id = $1 and
-          catalogs.name = catalog_name and
-          oe.title = entry_name
-      ) into result;
-
-    end case;
-
+  select exists (
+    select 1
+    from games
+    where
+      games.game_title = entry_name and
+      games.year = entry_year
+  ) into result;
   return result;
 end;
 $$ language plpgsql;
 
-create function check_entry_exists(entry_type entry_types, entry_name TEXT, entry_year INT)
+create function check_movie_entry_exists(entry_name TEXT, entry_year INT)
 returns boolean as $$
 declare
   result bool := false;
 begin
-
-  case entry_type
-    when 'games' then
-      select exists (
-        select 1
-        from games
-        where
-          games.game_title = entry_name and
-          games.year = entry_year
-      ) into result;
-    
-    when 'movies' then
-      select exists (
-        select 1
-        from movies
-        where
-          movies.movie_title = entry_name and
-          movies.year = entry_year
-      ) into result;
-    
-    when 'books' then
-      select exists (
-        select 1
-        from books
-        where
-          books.book_title = entry_name and
-          books.year = entry_year
-      ) into result;
-    
-    when 'other' then
-      result := true;
-    
-    end case;
-
+  select exists (
+    select 1
+    from movies
+    where
+      movies.movie_title = entry_name and
+      movies.year = entry_year
+  ) into result;
   return result;
 end;
 $$ language plpgsql;
 
-create function post_checks(user_id INT, catalog_name TEXT, catalog_type entry_types, entry_name TEXT, entry_year INT)
-returns void as $$
+create function check_book_entry_exists(entry_name TEXT, entry_author TEXT)
+returns boolean as $$
 declare
-  catalog_user_exists bool := false;
-  catalog_entry_exists bool := false;
-  entry_exists bool := false;
+  result bool := false;
 begin
-
-  -- Each post (create) requires checking the following:
-  -- 1. catalog belongs to user
-  -- 2. entry already in catalog
-  -- 3. entry exsits in database
-
-  select check_catalog_user_relationship(user_id, catalog_name, catalog_type) into catalog_user_exists;
-  if (not catalog_user_exists) then
-    raise exception 'Catalog does not belong to user.';
-  end if;
-
-  select check_entry_in_catalog(user_id, catalog_name, catalog_type, entry_name) into catalog_entry_exists;
-  if (catalog_entry_exists) then
-    raise exception 'Entry already exists.';
-  end if;
-
-  select check_entry_exists(catalog_type, entry_name, entry_year) into entry_exists;
-  if (not entry_exists) then
-    case catalog_type
-      when 'games' then
-        raise exception 'No game matches that title and year.';
-      when 'movies' then
-        raise exception 'No movie matches that title and year.';
-      when 'books' then
-        raise exception 'No book matches that title and year.';
-      end case;
-  end if;
-
-end;
-$$ language plpgsql;
-
-create function put_delete_checks(user_id INT, catalog_name TEXT, catalog_type entry_types, entry_name TEXT)
-returns void as $$
-declare
-  catalog_user_check bool := false;
-  catalog_entry_check bool := false;
-begin
-
-  -- Put (update) and Deletes requires the following checks:
-  -- 1. catalog belongs to user
-  -- 2. entry is in catalog
-
-  select check_catalog_user_relationship(user_id, catalog_name, catalog_type) into catalog_user_check;
-  if (not catalog_user_check) then
-    raise exception 'Catalog does not belong to user.';
-  end if;
-
-  select check_entry_in_catalog(user_id, catalog_name, catalog_type, entry_name) into catalog_entry_check;
-  if (not catalog_entry_check) then
-    raise exception 'Entry does not exist.';
-  end if;
-  
+  select exists (
+    select 1
+    from books
+    where
+      books.book_title = entry_name and
+      books.author = entry_author
+  ) into result;
+  return result;
 end;
 $$ language plpgsql;

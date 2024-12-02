@@ -108,7 +108,7 @@ def create_movie_entry(user_id: int, catalog_name: str, entry: movie_entries, re
             # Raises exception if there are any conflicts
             connection.execute(sqlalchemy.text(
                 """
-                select post_checks(:user_id, :catalog_name, 'movies', :entry_title, :entry_year)
+                select post_checks(:user_id, :catalog_name, 'movies', :entry_title, :entry_year, '')
                 """
             ), {"user_id": user_id, "catalog_name": catalog_name, "entry_title": entry.title, "entry_year": entry.year})
 
