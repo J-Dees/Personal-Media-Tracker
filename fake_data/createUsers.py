@@ -79,6 +79,7 @@ print()
 
 for user in users:
     user.pop("follower_count")
+    user.pop("id")
 
 print(f"Begining to fill database with {num_users} users...")
 with engine.begin() as connection:
@@ -86,9 +87,9 @@ with engine.begin() as connection:
     connection.execute(sqlalchemy.text(
         """
         insert into
-            users (id, name)
+            users (name)
         values
-            (:id, :name)
+            (:name)
         """
     ), users)
 
