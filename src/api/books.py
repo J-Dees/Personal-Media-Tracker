@@ -17,7 +17,11 @@ class sort_col_books(str, Enum):
 
 @router.get("")
 #                   default page 1, default book_title and author are all, default sorting column is book_title.
-def search_books(page: int = 1, book_title: str = "", author: str = "", sort_col: sort_col_books = sort_col_books.book_title):
+def search_books(response: Response,
+                 page: int = 1, 
+                 book_title: str = "", 
+                 author: str = "", 
+                 sort_col: sort_col_books = sort_col_books.book_title):
     """
     Search the books database.
     - page: The page of results to return.
@@ -52,4 +56,4 @@ def search_books(page: int = 1, book_title: str = "", author: str = "", sort_col
         if item.value != sort_col:
             content_statement = content_statement.order_by(item)
     
-    return db.execute_search(stats_statement, content_statement, page)
+    return db.execute_search(stats_statement, content_statement, page, response)

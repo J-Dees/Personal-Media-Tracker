@@ -65,9 +65,8 @@ def fetch_user_catalogs(response: Response,
     if (type != catalog_type.any):
         content_statement = content_statement.where(db.catalogs.c.type == type)
         stats_statement = stats_statement.where(db.catalogs.c.type == type)
-    
-    response.status_code = status.HTTP_200_OK
-    return db.execute_search(stats_statement, content_statement, page)
+
+    return db.execute_search(stats_statement, content_statement, page, response)
 
 class catalog_create(BaseModel):
     name: str
@@ -101,10 +100,10 @@ def create_catalog(user_id: int, entry: catalog_create, response: Response):
                 VALUES (:user_id, :name, :type, :private)
                 """), entry_dict)
             response.status_code = status.HTTP_201_CREATED
-            return f"Catalog with name {entry.name} created"
+            return {"response": f"Catalog with name {entry.name} created"}
         else:    
-            response.status_code = status.HTTP_403_FORBIDDEN
-            return "Catalog name already taken. Please choose another name."
+            response.status_code = status.HTTP_409_CONFLICT
+            return {"error": "Catalog name already taken. Please choose another name."}
 
 class catalog_update(BaseModel):
     name: str
@@ -131,10 +130,10 @@ def update_catalog(user_id: int, catalog_name: str, catalog_update: catalog_upda
                     WHERE user_id = :user_id AND name = :name)
                 """), catalog_update_dict)
         response.status_code = status.HTTP_202_ACCEPTED
-        return f"Catalog {catalog_name} updated to {catalog_update}"
+        return {"repsonse": f"Catalog {catalog_name} updated to {catalog_update}"}
     except:
-        response.status_code = status.HTTP_401_UNAUTHORIZED
-        return f"Unable to access catalog {catalog_name}"
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return {"error": f"The catalog {catalog_name} does not exist for the user_id {user_id}"}
 
 
 @router.delete("/{catalog_name}")
@@ -159,7 +158,7 @@ def delete_catalog(user_id: int, catalog_name: str, response: Response):
                 WHERE (user_id, id) = (:user_id, :id)
                 """), {'user_id': catalog.user_id, 'id': catalog.id})
         response.status_code = status.HTTP_204_NO_CONTENT
-        return f"Catalog {catalog_name} successfully deleted"
+        return {"response": f"Catalog {catalog_name} successfully deleted"}
     except:
-        response.status_code = status.HTTP_401_UNAUTHORIZED
-        return f"Unable to access catalog {catalog_name}"
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return {"error": f"Unable to find the catalog {catalog_name} for the user with id: {user_id}"}

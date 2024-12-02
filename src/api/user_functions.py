@@ -21,17 +21,18 @@ def create_new_user(name, response: Response):
                 VALUES (:name)
                 """), {'name': name})
             response.status_code = status.HTTP_201_CREATED
-            return {"Response": "User created"}
+            return {"response": "User created"}
         except:
             response.status_code = status.HTTP_409_CONFLICT
-            return {"Errors": "Username already taken, please choose a different name."}
+            return {"error": "Username already taken, please choose a different name."}
     
 class asc_desc(str, Enum):
     asc = "asc"
     desc = "desc"
 
 @router.get("")
-def get_users(page: int = 1, 
+def get_users(response: Response,
+              page: int = 1, 
               name: str = "",
               direction: asc_desc = asc_desc.asc):
     """Lists all users fitting the query parameters.
@@ -59,7 +60,7 @@ def get_users(page: int = 1,
     else:
         content_statement = content_statement.order_by(db.users.c.name)
 
-    return db.execute_search(stats_statement, content_statement, page)
+    return db.execute_search(stats_statement, content_statement, page, response)
 
 @router.get("/{user_name}")
 def login_user(user_name, response: Response):
@@ -79,7 +80,7 @@ def login_user(user_name, response: Response):
                     }
         except:
             response.status_code = status.HTTP_404_NOT_FOUND
-            return {"error":"User with provided username not found."}
+            return {"error": "User with provided username not found."}
 
 @router.delete("/{user_id}")
 def delete_user(user_id, response: Response):
@@ -95,7 +96,7 @@ def delete_user(user_id, response: Response):
                 """), {'user_id': user_id})
 
         response.status_code = status.HTTP_204_NO_CONTENT
-        return "Successfully deleted user account and all references."
+        return {"response": "Successfully deleted user account and all references."}
     except:
         response.status_code = status.HTTP_404_NOT_FOUND
-        return "Invalid user id."
+        return {"error": "Invalid user id."}

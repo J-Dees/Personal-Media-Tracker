@@ -16,7 +16,11 @@ class sort_col_movies(str, Enum):
 
 @router.get("")
 #                   default page 1, default movie_title and year are all, default sorting column is movie_title.
-def search_movies(page: int = 1, movie_title: str = "", year: int = None, sort_col: sort_col_movies = sort_col_movies.movie_title):
+def search_movies(response: Response,
+                  page: int = 1, 
+                  movie_title: str = "", 
+                  year: int = None, 
+                  sort_col: sort_col_movies = sort_col_movies.movie_title):
     """
     Search the movies database.
     - page: The page of results to return.
@@ -51,4 +55,4 @@ def search_movies(page: int = 1, movie_title: str = "", year: int = None, sort_c
         if item.value != sort_col:
             content_statement = content_statement.order_by(item)
 
-    return db.execute_search(stats_statement, content_statement, page)
+    return db.execute_search(stats_statement, content_statement, page, response)
