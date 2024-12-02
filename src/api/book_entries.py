@@ -48,6 +48,7 @@ def entry_search(user_id: int,
             sqlalchemy.func.count(db.entries.c.id).label("total_rows"))
         .select_from(db.entries)
         .join(db.catalogs, db.entries.c.catalog_id == db.catalogs.c.id)
+        .join(db.book_entry, db.entries.c.id == db.book_entry.c.entry_id)
         .where(db.catalogs.c.user_id == user_id)
         .where(db.catalogs.c.name == catalog_name)
         .where(db.catalogs.c.type == "books")
@@ -192,7 +193,7 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
                 """
                 select 
                     check_catalog_user_relationship(:user_id, :catalog_name, 'books') as catalog_user_relationship,
-                    check_entry_in_catalog(:user_id, :catalog_name, 'books', :entry_name) as entry_in_catalog,
+                    check_entry_in_catalog(:user_id, :catalog_name, 'books', :entry_name) as entry_in_catalog
                 """
             ), {"user_id": user_id, "catalog_name": catalog_name, "entry_name": entry_title}).first()
 
@@ -212,7 +213,8 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
                     catalogs
                 WHERE
                     user_id = :user_id and
-                    name = :catalog_name
+                    name = :catalog_name and
+                    type = 'books'
                 """
             ), {"user_id": user_id, "catalog_name": catalog_name}).one()
             parameters = entry.dict()
@@ -260,7 +262,7 @@ def delete_entry(user_id: int, catalog_name: str, entry_title: str, response: Re
                 """
                 select 
                     check_catalog_user_relationship(:user_id, :catalog_name, 'books') as catalog_user_relationship,
-                    check_entry_in_catalog(:user_id, :catalog_name, 'books', :entry_name) as entry_in_catalog,
+                    check_entry_in_catalog(:user_id, :catalog_name, 'books', :entry_name) as entry_in_catalog
                 """
             ), {"user_id": user_id, "catalog_name": catalog_name, "entry_name": entry_title}).first()
 
@@ -280,7 +282,8 @@ def delete_entry(user_id: int, catalog_name: str, entry_title: str, response: Re
                     catalogs
                 WHERE
                     user_id = :user_id and
-                    name = :catalog_name
+                    name = :catalog_name and
+                    type = 'books'
                 """
             ), {"user_id": user_id, "catalog_name": catalog_name}).one()
 

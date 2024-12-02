@@ -48,6 +48,7 @@ def entry_search(user_id: int,
             sqlalchemy.func.count(db.entries.c.id).label("total_rows"))
         .select_from(db.entries)
         .join(db.catalogs, db.entries.c.catalog_id == db.catalogs.c.id)
+        .join(db.movie_entry, db.entries.c.id == db.movie_entry.c.entry_id)
         .where(db.catalogs.c.user_id == user_id)
         .where(db.catalogs.c.name == catalog_name)
         .where(db.catalogs.c.type == "movies")
@@ -111,11 +112,23 @@ def create_movie_entry(user_id: int, catalog_name: str, entry: movie_entries, re
             # 2. entry is already in catalog
             # 3. entry is in database
             # Raises exception if there are any conflicts
-            connection.execute(sqlalchemy.text(
+            valid_request = connection.execute(sqlalchemy.text(
                 """
-                select post_checks(:user_id, :catalog_name, 'movies', :entry_title, :entry_year, '')
+                select 
+                    check_catalog_user_relationship(:user_id, :catalog_name, 'movies') as catalog_user_relationship,
+                    check_entry_in_catalog(:user_id, :catalog_name, 'movies', :entry_name) as entry_in_catalog,
+                    check_movie_entry_exists(:entry_name, :entry_year) as entry_exists
                 """
-            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_title": entry.title, "entry_year": entry.year})
+            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_name": entry.title, "entry_year": entry.year}).first()
+
+            if (not valid_request.catalog_user_relationship) :
+                raise Exception("Catalog does not belong to user.")
+            
+            if (valid_request.entry_in_catalog):
+                raise Exception("Entry already exists in catalog.")
+            
+            if (not valid_request.entry_exists) :
+                raise Exception("No movie matches that title and year")
 
 
             entry_id = connection.execute(sqlalchemy.text(
@@ -177,11 +190,19 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
             # 1. Catalog belongs to user
             # 2. Entry is in catalog
             # Raises exception if there are any conflicts
-            connection.execute(sqlalchemy.text(
+            valid_request = connection.execute(sqlalchemy.text(
                 """
-                select put_delete_checks(:user_id, :catalog_name, 'movies', :entry_title)
+                select 
+                    check_catalog_user_relationship(:user_id, :catalog_name, 'movies') as catalog_user_relationship,
+                    check_entry_in_catalog(:user_id, :catalog_name, 'movies', :entry_name) as entry_in_catalog
                 """
-            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_title": entry_title})
+            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_name": entry_title}).first()
+
+            if (not valid_request.catalog_user_relationship) :
+                raise Exception("Catalog does not belong to user.")
+            
+            if (not valid_request.entry_in_catalog):
+                raise Exception("Entry already exists in catalog.")
 
 
             # Get catalog id
@@ -193,7 +214,8 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
                     catalogs
                 WHERE
                     user_id = :user_id and
-                    name = :catalog_name
+                    name = :catalog_name and
+                    type = 'movies'
                 """
             ), {"user_id": user_id, "catalog_name": catalog_name}).one()
 
@@ -238,11 +260,19 @@ def delete_entry(user_id: int, catalog_name: str, entry_title: str, response: Re
             # 1. Catalog belongs to user
             # 2. Entry is in catalog
             # Raises exception if there are any conflicts
-            connection.execute(sqlalchemy.text(
+            valid_request = connection.execute(sqlalchemy.text(
                 """
-                select put_delete_checks(:user_id, :catalog_name, 'movies', :entry_title)
+                select 
+                    check_catalog_user_relationship(:user_id, :catalog_name, 'movies') as catalog_user_relationship,
+                    check_entry_in_catalog(:user_id, :catalog_name, 'movies', :entry_name) as entry_in_catalog
                 """
-            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_title": entry_title})
+            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_name": entry_title,}).first()
+
+            if (not valid_request.catalog_user_relationship) :
+                raise Exception("Catalog does not belong to user.")
+            
+            if (not valid_request.entry_in_catalog):
+                raise Exception("Entry already exists in catalog.")
 
 
             # Get catalog id
@@ -254,7 +284,8 @@ def delete_entry(user_id: int, catalog_name: str, entry_title: str, response: Re
                     catalogs
                 WHERE
                     user_id = :user_id and
-                    name = :catalog_name
+                    name = :catalog_name and
+                    type = 'games'
                 """
             ), {"user_id": user_id, "catalog_name": catalog_name}).one()
 

@@ -48,6 +48,7 @@ def entry_search(user_id: int,
             sqlalchemy.func.count(db.entries.c.id).label("total_rows"))
         .select_from(db.entries)
         .join(db.catalogs, db.entries.c.catalog_id == db.catalogs.c.id)
+        .join(db.other_entry, db.entries.c.id == db.other_entry.c.entry_id)
         .where(db.catalogs.c.user_id == user_id)
         .where(db.catalogs.c.name == catalog_name)
         .where(db.catalogs.c.type == "other")
@@ -108,12 +109,20 @@ def create_other_entry(user_id: int, catalog_name: str, entry: other_entries, re
             # 2. entry is already in catalog
             # 3. entry is in database
             # Raises exception if there are any conflicts
-            connection.execute(sqlalchemy.text(
+            valid_request = connection.execute(sqlalchemy.text(
                 """
-                select post_checks(:user_id, :catalog_name, 'other', :entry_title, -1, '')
+                select 
+                    check_catalog_user_relationship(:user_id, :catalog_name, 'other') as catalog_user_relationship,
+                    check_entry_in_catalog(:user_id, :catalog_name, 'other', :entry_name) as entry_in_catalog
                 """
-            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_title": entry.title})
+            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_name": entry.title}).first()
 
+            if (not valid_request.catalog_user_relationship) :
+                raise Exception("Catalog does not belong to user.")
+            
+            if (valid_request.entry_in_catalog):
+                raise Exception("Entry already exists in catalog.")
+            
 
             entry_id = connection.execute(sqlalchemy.text(
                 """
@@ -172,11 +181,19 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
             # 1. Catalog belongs to user
             # 2. Entry is in catalog
             # Raises exception if there are any conflicts
-            connection.execute(sqlalchemy.text(
+            valid_request = connection.execute(sqlalchemy.text(
                 """
-                select put_delete_checks(:user_id, :catalog_name, 'other', :entry_title)
+                select 
+                    check_catalog_user_relationship(:user_id, :catalog_name, 'other') as catalog_user_relationship,
+                    check_entry_in_catalog(:user_id, :catalog_name, 'other', :entry_name) as entry_in_catalog
                 """
-            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_title": entry_title})
+            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_name": entry_title}).first()
+
+            if (not valid_request.catalog_user_relationship) :
+                raise Exception("Catalog does not belong to user.")
+            
+            if (not valid_request.entry_in_catalog):
+                raise Exception("Entry already exists in catalog.")
 
 
             # Get catalog id
@@ -188,7 +205,8 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
                     catalogs
                 WHERE
                     user_id = :user_id and
-                    name = :catalog_name
+                    name = :catalog_name and
+                    type = 'other'
                 """
             ), {"user_id": user_id, "catalog_name": catalog_name}).one()
 
@@ -230,11 +248,19 @@ def delete_entry(user_id: int, catalog_name: str, entry_title: str, response: Re
             # 1. Catalog belongs to user
             # 2. Entry is in catalog
             # Raises exception if there are any conflicts
-            connection.execute(sqlalchemy.text(
+            valid_request = connection.execute(sqlalchemy.text(
                 """
-                select put_delete_checks(:user_id, :catalog_name, 'other', :entry_title)
+                select 
+                    check_catalog_user_relationship(:user_id, :catalog_name, 'other') as catalog_user_relationship,
+                    check_entry_in_catalog(:user_id, :catalog_name, 'other', :entry_name) as entry_in_catalog
                 """
-            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_title": entry_title})
+            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_name": entry_title}).first()
+
+            if (not valid_request.catalog_user_relationship) :
+                raise Exception("Catalog does not belong to user.")
+            
+            if (not valid_request.entry_in_catalog):
+                raise Exception("Entry already exists in catalog.")
 
 
             # Get catalog id
