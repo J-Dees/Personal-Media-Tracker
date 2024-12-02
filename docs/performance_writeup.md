@@ -60,7 +60,7 @@
 
 ### movie_entries
 - GET /users/{user_id}/catalogs/{catalog_name}/movie-entries
-    - 
+    - 44 ms
 - POST /users/{user_id}/catalogs/{catalog_name}/movie-entries
     - 18 ms
 - PUT /users/{user_id}/catalogs/{catalog_name}/movie-entries/{entry_title}
@@ -73,7 +73,7 @@
 
 ### book_entries
 - GET /users/{user_id}/catalogs/{catalog_name}/book-entries
-    -
+    - 43 ms
 - POST /users/{user_id}/catalogs/{catalog_name}/book-entries
     - 18 ms
 - PUT /users/{user_id}/catalogs/{catalog_name}/book-entries/{entry_title}
@@ -83,7 +83,7 @@
 
 ### other_entries
 - GET /users/{user_id}/catalogs/{catalog_name}/other-entries
-    -
+    - 43 ms
 - POST /users/{user_id}/catalogs/{catalog_name}/other-entries
     - 11 ms
 - PUT /users/{user_id}/catalogs/{catalog_name}/other-entries/{entry_title}

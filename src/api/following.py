@@ -149,12 +149,10 @@ def get_followees_entries(user_id: int,
         .where(db.social.c.user_id == user_id)
         .where(db.users.c.name.ilike(f"%{following_name}%"))
         .where(db.catalogs.c.name.ilike(f"%{catalog}%"))
+                                                                 #if recommend==false then we want all results not just the not recommended ones.
+        .where(db.entries.c.recommend == sqlalchemy.func.coalesce(recommend if recommend == True else None, db.entries.c.recommend)) 
         .limit(db.MAX_PER_PAGE).offset(db.MAX_PER_PAGE*(page-1))
     )
-    #only limit results to recommended if recommend is true.
-    if (recommend):
-        content_statement = content_statement.where(db.entries.c.recommend == recommend)
-        stats_statement = stats_statement.where(db.entries.c.recommend == recommend)
 
     #specialize the stats and content statements for a specific entry type.
     if (return_type == entry_type.movies):
@@ -183,6 +181,11 @@ def get_followees_entries(user_id: int,
             content_statement = content_statement.order_by(sqlalchemy.desc(sort_col.get(order_by)))
         else:
             content_statement = content_statement.order_by(sort_col.get(order_by))
+        #To break ties in sort_col.
+        for item in sort_col.values():
+            if item != sort_col.get(order_by):
+                content_statement = content_statement.order_by(item)
+        
 
     elif (return_type == entry_type.books):
         sort_col = {"title": "book_title", "rating": "rating", "date": "date_read"}
@@ -210,6 +213,10 @@ def get_followees_entries(user_id: int,
             content_statement = content_statement.order_by(sqlalchemy.desc(sort_col.get(order_by)))
         else:
             content_statement = content_statement.order_by(sort_col.get(order_by))
+        #To break ties in sort_col.
+        for item in sort_col.values():
+            if item != sort_col.get(order_by):
+                content_statement = content_statement.order_by(item)
 
     elif (return_type == entry_type.games):
         sort_col = {"title": "game_title", "rating": "rating", "date": "hours_played"}
@@ -237,6 +244,10 @@ def get_followees_entries(user_id: int,
             content_statement = content_statement.order_by(sqlalchemy.desc(sort_col.get(order_by)))
         else:
             content_statement = content_statement.order_by(sort_col.get(order_by))
+        #To break ties in sort_col.
+        for item in sort_col.values():
+            if item != sort_col.get(order_by):
+                content_statement = content_statement.order_by(item)
 
     else:#return_type is other
         sort_col = {"title": "title", "rating": "quality", "date": "date_obtained"}
@@ -262,6 +273,10 @@ def get_followees_entries(user_id: int,
             content_statement = content_statement.order_by(sqlalchemy.desc(sort_col.get(order_by)))
         else:
             content_statement = content_statement.order_by(sort_col.get(order_by))
+        #To break ties in sort_col.
+        for item in sort_col.values():
+            if item != sort_col.get(order_by):
+                content_statement = content_statement.order_by(item)
     
     return db.execute_search(stats_statement, content_statement, page)
 
@@ -383,41 +398,31 @@ def follow_user(user_id: int, user_name: str, response: Response):
 def unfollow_user(user_id: int, user_name: str, response: Response):
     """Remove user from list of people to follow by username.
         - user_name: The name of the user you wish to remove from your following list."""
-    try:
-        with db.engine.begin() as connection:
-                # check if user in follow list
-                check = connection.execute(sqlalchemy.text(
-                    """
-                    SELECT following_id
-                    FROM social
-                    WHERE user_id = :user AND following_id = (
-                        SELECT id
-                        FROM users
-                        WHERE name = :user_name
-                        );
-                    """),
-                    {
-                        'user_name': user_name,
-                        'user': user_id,
-                    }
-                ).one()
-                connection.execute(sqlalchemy.text(
-                    """
-                    DELETE FROM social
-                    WHERE user_id = :user AND following_id = (
-                        SELECT id
-                        FROM users
-                        WHERE name = :user_name
-                        )
-                    """
-                ),
-                    {
-                        'user_name': user_name,
-                        'user': user_id,
-                    }
+    with db.engine.begin() as connection:
+        results = connection.execute(sqlalchemy.text(
+            """
+            DELETE FROM social
+            WHERE user_id = :user AND following_id = (
+                SELECT id
+                FROM users
+                WHERE name = :user_name
                 )
-        response.status_code = status.HTTP_204_NO_CONTENT
-        return "User successfully removed from people you follow."
-    except:
+            """
+        ),
+            {
+                'user_name': user_name,
+                'user': user_id,
+            }
+        )
+    # Nothing was removed then bad.
+    if results.rowcount == 0:
         response.status_code = status.HTTP_404_NOT_FOUND
         return "User by the requested name not found in list of people you follow."
+    # One item was removed then good.
+    elif results.rowcount == 1:
+        response.status_code = status.HTTP_200_OK
+        return "User successfully removed from people you follow."
+    # Multiple removed items. Should never happen since you can only follow each person once and not remove multiple people at a time.
+    else:
+        response.status_code = status.HTTP_501_NOT_IMPLEMENTED
+        return "Multiple users successfully removed from people you follow. SHOULD NOT HAPPEN."

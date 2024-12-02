@@ -55,6 +55,12 @@ def fetch_user_catalogs(response: Response,
         content_statement = content_statement.order_by(sqlalchemy.desc(order_by))
     else:
         content_statement = content_statement.order_by(order_by)
+
+    #Break ties by the order of catalog_order_by.
+    for item in catalog_order_by:
+        if item.value != order_by:
+            content_statement = content_statement.order_by(item)
+
     #add where if searching for a specific catalog type.
     if (type != catalog_type.any):
         content_statement = content_statement.where(db.catalogs.c.type == type)
