@@ -168,6 +168,7 @@ def create_other_entry(user_id: int, catalog_name: str, entry: other_entries, re
         response.status_code = status.HTTP_400_BAD_REQUEST
         return "Incorrect Catalog type. Catalog type not 'other'."
 
+    response.status_code = status.HTTP_201_CREATED
     return "OK"
 
 class update_other_entries(BaseModel):
