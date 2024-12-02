@@ -126,8 +126,6 @@ def create_game_entry(user_id: int, catalog_name: str, entry: game_entries, resp
         - recommend: A boolean ('true' or 'false') on whether you would recommend the game to another.
         - private: A boolean ('true' or 'false') on if you want others to see this entry.
     '''
-    # insert into catalog table a new row with unqiue catalog id
-    # do we want this to have a composite key for userid, catalog id, and entry id (ie user 1 catalog 1 entry 1, user 2 catalog 1 entry 1 etc)
 
     try:
         # Verify catalog belongs to user

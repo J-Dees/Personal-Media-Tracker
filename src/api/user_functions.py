@@ -85,7 +85,7 @@ def login_user(name, response: Response):
 def delete_user(user_id, response: Response):
     '''Deletes a user account. 
         - This will remove all traces of the user including catalogs, entries, and followers.'''
-    # API Spec notes that user will receive a warning prior to deletion
+
     try:
         with db.engine.begin() as connection:
             connection.execute(sqlalchemy.text(
@@ -93,7 +93,7 @@ def delete_user(user_id, response: Response):
                 DELETE FROM users
                 WHERE id = :user_id
                 """), {'user_id': user_id})
-        # TEST LATER to make sure it cascades
+
         response.status_code = status.HTTP_204_NO_CONTENT
         return "Successfully deleted user account and all references."
     except:
