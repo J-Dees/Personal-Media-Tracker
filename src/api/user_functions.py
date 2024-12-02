@@ -21,10 +21,10 @@ def create_new_user(name, response: Response):
                 VALUES (:name)
                 """), {'name': name})
             response.status_code = status.HTTP_201_CREATED
-            return "OK"
+            return {"Response": "User created"}
         except:
             response.status_code = status.HTTP_409_CONFLICT
-            return "Username already taken, please choose a different name."
+            return {"Errors": "Username already taken, please choose a different name."}
     
 class asc_desc(str, Enum):
     asc = "asc"
@@ -62,7 +62,7 @@ def get_users(page: int = 1,
     return db.execute_search(stats_statement, content_statement, page)
 
 @router.get("/{user_name}")
-def login_user(name, response: Response):
+def login_user(user_name, response: Response):
     '''Allows the user to login with their username. 
         - The username must exist.
         - The returned user_id will be used as authentication to modify anything related to the user.'''
@@ -73,13 +73,13 @@ def login_user(name, response: Response):
                 SELECT id
                 FROM users
                 WHERE name = :name
-                """), {'name' : name}).scalar_one()
+                """), {'name' : user_name}).scalar_one()
             return {
                     "user_id": user_id
                     }
         except:
             response.status_code = status.HTTP_404_NOT_FOUND
-            return "User with provided username not found."
+            return {"error":"User with provided username not found."}
 
 @router.delete("/{user_id}")
 def delete_user(user_id, response: Response):
