@@ -63,8 +63,8 @@ def entry_search(user_id: int,
             db.other_entry.c.price,
             db.other_entry.c.date_obtained,
             db.other_entry.c.description)
-        .select_from(db.catalogs)
-        .join(db.entries, db.entries.c.catalog_id == db.catalogs.c.id)
+        .select_from(db.entries)
+        .join(db.catalogs, db.entries.c.catalog_id == db.catalogs.c.id)
         .join(db.other_entry, db.other_entry.c.entry_id == db.entries.c.id)
         .where(db.catalogs.c.user_id == user_id)
         .where(db.catalogs.c.name == catalog_name)
@@ -103,7 +103,7 @@ def entry_exists(user_id: int, catalog_name: str, entry_title: str) -> bool:
     return result.verified
 
 @router.post("")
-def create_other_entry(user_id: int, catalog_name: str, entry: other_entries):
+def create_other_entry(user_id: int, catalog_name: str, entry: other_entries, response: Response):
     '''
     Cretes a new other_entry in the catalog catalg_name.\\ 
     The entry must not already exist and the catalog must be of the Type 'other'
@@ -129,7 +129,10 @@ def create_other_entry(user_id: int, catalog_name: str, entry: other_entries):
                 """
                 INSERT INTO
                     entries (catalog_id, private, recommend)
-                    (SELECT catalogs.id, :private, :recommend FROM catalogs WHERE name = :catalog_name AND user_id = :user_id)
+                    (SELECT catalogs.id, :private, :recommend FROM catalogs 
+                        WHERE name = :catalog_name 
+                        AND user_id = :user_id
+                        AND type = 'other')
                 RETURNING id
                 """
             ), {
@@ -157,6 +160,8 @@ def create_other_entry(user_id: int, catalog_name: str, entry: other_entries):
     
     except Exception as e:
         print("Error:", e)
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return "Incorrect Catalog type. Catalog type not 'other'."
 
     return "OK"
 

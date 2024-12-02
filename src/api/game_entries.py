@@ -144,7 +144,10 @@ def create_game_entry(user_id: int, catalog_name: str, entry: game_entries, resp
                 """
                 INSERT INTO
                     entries (catalog_id, private, recommend)
-                    (SELECT catalogs.id, :private, :recommend FROM catalogs WHERE name = :catalog_name AND user_id = :user_id)
+                    (SELECT catalogs.id, :private, :recommend FROM catalogs 
+                        WHERE name = :catalog_name 
+                        AND user_id = :user_id
+                        AND type = 'games')
                 RETURNING id
 
                 """
@@ -172,8 +175,8 @@ def create_game_entry(user_id: int, catalog_name: str, entry: game_entries, resp
             })
 
     except Exception as e:
-        response.status_code = status.HTTP_404_NOT_FOUND
-        return str(e)
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return "Incorrect Catalog type. Catalog type not 'games'."
 
     return "OK"
 

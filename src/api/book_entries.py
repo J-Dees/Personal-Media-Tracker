@@ -109,6 +109,10 @@ def entry_search(user_id: int,
     else:
         content_statement = content_statement.order_by(order_by)
 
+    for item in entries_order_by:
+        if item.value != order_by:
+            content_statement = content_statement.order_by(item)
+
     return db.execute_search(stats_statement, content_statement, page)
 
 @router.post("")
@@ -146,7 +150,10 @@ def create_entry(user_id: int, catalog_name: str, entry: book_entries, response:
                 """
                 INSERT INTO
                     entries (catalog_id, private, recommend)
-                    (SELECT catalogs.id, :private, :recommend FROM catalogs WHERE name = :catalog_name AND user_id = :user_id)
+                    (SELECT catalogs.id, :private, :recommend FROM catalogs 
+                        WHERE name = :catalog_name 
+                        AND user_id = :user_id
+                        AND type = 'books')
                 RETURNING id
                 """
             ), {"private": entry.private, "recommend": entry.recommend, "catalog_name": catalog_name, "user_id": user_id}).one()
@@ -173,8 +180,8 @@ def create_entry(user_id: int, catalog_name: str, entry: book_entries, response:
             })
     
     except Exception as e:
-        response.status_code = status.HTTP_404_NOT_FOUND
-        return "Failed to create entry"
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return "Incorrect Catalog type. Catalog type not 'books'."
 
     return "OK"
 
