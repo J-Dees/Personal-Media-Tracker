@@ -388,7 +388,7 @@ def follow_user(user_id: int, user_name: str, response: Response):
                             'new_follow': new_follow
                         }
                     )
-                    response.status_code = status.HTTP_200_OK
+                    response.status_code = status.HTTP_201_CREATED
                     return "OK"
     except:
         response.status_code = status.HTTP_404_NOT_FOUND
