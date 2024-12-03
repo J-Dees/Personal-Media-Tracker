@@ -103,9 +103,9 @@ class catalog_update(BaseModel):
 def update_catalog(user_id: int, catalog_name: str, catalog_update: catalog_update, response: Response):
     """Updates a catalog name and privacy.
         - You must provide a correct user_id and catalog_name pair."""
-    catalog_update_dict =  catalog_update.dict()
+    catalog_update_dict = catalog_update.dict()
     catalog_update_dict.update({"user_id": user_id,
-                                "name": catalog_name})
+                                "old_name": catalog_name})
 
     with db.engine.begin() as connection:
         results = connection.execute(sqlalchemy.text(
@@ -115,7 +115,7 @@ def update_catalog(user_id: int, catalog_name: str, catalog_update: catalog_upda
             WHERE (user_id, id) = (
                 SELECT user_id, id
                 FROM catalogs
-                WHERE user_id = :user_id AND name = :name)
+                WHERE user_id = :user_id AND name = :old_name)
             """), catalog_update_dict)
     if results.rowcount != 1:
         response.status_code = status.HTTP_404_NOT_FOUND
