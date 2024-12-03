@@ -87,16 +87,15 @@ def delete_user(user_id, response: Response):
     '''Deletes a user account. 
         - This will remove all traces of the user including catalogs, entries, and followers.'''
 
-    try:
-        with db.engine.begin() as connection:
-            connection.execute(sqlalchemy.text(
-                """
-                DELETE FROM users
-                WHERE id = :user_id
-                """), {'user_id': user_id})
-
-        response.status_code = status.HTTP_204_NO_CONTENT
-        return {"response": "Successfully deleted user account and all references."}
-    except:
-        response.status_code = status.HTTP_404_NOT_FOUND
-        return {"error": "Invalid user id."}
+    with db.engine.begin() as connection:
+        results = connection.execute(sqlalchemy.text(
+            """
+            DELETE FROM users
+            WHERE id = :user_id 
+            """), {'user_id': user_id})
+        if results.rowcount != 1:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"error": "Invalid user id."}
+    response.status_code = status.HTTP_206_PARTIAL_CONTENT
+    return {"response": "Successfully deleted user account and all references."}
+    
