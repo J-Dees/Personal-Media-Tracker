@@ -1131,7 +1131,7 @@ Deletes the entry under user_id in catalog_name with the title entry_title.
 
 ## `/admin/reset`
 
-Resets the state of the database and loads in all movie, game, and book metadata. (Do not use this in practicality)
+Resets the state of the database. Drops all tables and their data except Books, Movies, and Games and then loads all the tables back in. 
 
 **Response**:
 - HTTP_200_OK
