@@ -103,17 +103,19 @@ def view_followees_catalogs(user_id:int ,
 
     return db.execute_search(stats_statement, content_statement, page, response)
 
+
+
 @router.get("/entries")
 def get_followees_entries(user_id: int, 
                           response: Response,
-                        page: int = 1,
-                        following_name: str="",
-                        catalog: str="",
-                        title: str = "",
-                        recommend: bool = False,
-                        order_by: entries_sort_col = entries_sort_col.title,
-                        direction: asc_desc = asc_desc.asc,
-                        return_type: entry_type = entry_type.movies):
+                          page: int = 1,
+                          following_name: str="",
+                          catalog: str="",
+                          title: str = "",
+                          recommend: bool = False,
+                          order_by: entries_sort_col = entries_sort_col.title,
+                          direction: asc_desc = asc_desc.asc,
+                          return_type: entry_type = entry_type.movies):
     """View all public catalog entries of followee's based on query parameters.
         - page: The page of results to return.
         - following_name: A String that each followee's name returned must contain.

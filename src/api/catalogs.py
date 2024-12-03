@@ -82,26 +82,17 @@ def create_catalog(user_id: int, entry: catalog_create, response: Response):
     entry_dict = entry.dict()
     entry_dict.update({"user_id": user_id})
     with db.engine.begin() as connection:
-        exists = connection.execute(sqlalchemy.text(
+        results = connection.execute(sqlalchemy.text(
             """
-            SELECT id 
-            FROM catalogs 
-            WHERE user_id = :user_id AND name = :name"""), 
-            {
-                "user_id": user_id,
-                "name": entry.name
-            }).scalar_one_or_none()
-        if exists is None:
-            connection.execute(sqlalchemy.text(
-                """
-                INSERT INTO catalogs (user_id, name, type, private) 
-                VALUES (:user_id, :name, :type, :private)
-                """), entry_dict)
-            response.status_code = status.HTTP_201_CREATED
-            return {"response": f"Catalog with name {entry.name} created"}
-        else:    
+            INSERT INTO catalogs (user_id, name, type, private) 
+            VALUES (:user_id, :name, :type, :private)
+            ON CONFLICT DO NOTHING
+            """), entry_dict)
+        if results.rowcount != 1:
             response.status_code = status.HTTP_409_CONFLICT
-            return {"error": "Catalog name already taken. Please choose another name."}
+            return {"error": "Catalog name already taken. Please choose another name."}    
+    response.status_code = status.HTTP_201_CREATED
+    return {"response": f"Catalog with name {entry.name} created"}
 
 class catalog_update(BaseModel):
     name: str

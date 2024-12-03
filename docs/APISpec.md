@@ -391,6 +391,7 @@ Creates a catalog for user_id. The request body has all the fields to be filled 
 
 **On Error Response**
 - HTTP_409_CONFLICT
+- HTTP_500_INTERNAL_SERVER_ERROR
 
 ``` json
 {
