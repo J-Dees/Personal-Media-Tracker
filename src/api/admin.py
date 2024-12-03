@@ -38,34 +38,37 @@ def reset_db(response: Response):
     It takes a while to insert all of the data into the tables.
     '''
 
-    books = parse_csv("books_data.csv")
-    movies = parse_csv("movies_data.csv")
-    games = parse_csv("games_data.csv")
+    # books = parse_csv("books_data.csv")
+    # movies = parse_csv("movies_data.csv")
+    # games = parse_csv("games_data.csv")
 
-    try:
-        with db.engine.begin() as connection:
-            print("Beginning Reset...")
-            connection.execute(sqlalchemy.text("SELECT delete_database()"))
-            connection.execute(sqlalchemy.text("SELECT create_database()"))
-            book_res = connection.execute(sqlalchemy.text("INSERT INTO books (id, book_title, author) VALUES (:id, :book_title, :author)"), books)
-            movie_res = connection.execute(sqlalchemy.text("INSERT INTO movies (id, movie_title, year) VALUES (:id, :movie_title, :year)"), movies)
-            games_res = connection.execute(sqlalchemy.text("INSERT INTO games (id, game_title, year) VALUES (:id, :game_title, :year)"), games)
+    # try:
+    with db.engine.begin() as connection:
+        connection.execute(sqlalchemy.text(
+            """
+            SELECT 
+                delete_database(),
+                create_database()
+            """))
+    # connection.execute(sqlalchemy.text("SELECT create_database()"))
+    #         book_res = connection.execute(sqlalchemy.text("INSERT INTO books (id, book_title, author) VALUES (:id, :book_title, :author)"), books)
+    #         movie_res = connection.execute(sqlalchemy.text("INSERT INTO movies (id, movie_title, year) VALUES (:id, :movie_title, :year)"), movies)
+    #         games_res = connection.execute(sqlalchemy.text("INSERT INTO games (id, game_title, year) VALUES (:id, :game_title, :year)"), games)
 
-        if book_res.rowcount != len(books):
-            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-            raise Exception("Did not insert all books")
+    #     if book_res.rowcount != len(books):
+    #         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    #         raise Exception("Did not insert all books")
 
-        if movie_res.rowcount != len(movies):
-            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-            raise Exception("Did not insert all movies")
+    #     if movie_res.rowcount != len(movies):
+    #         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    #         raise Exception("Did not insert all movies")
 
-        if games_res.rowcount != len(movies):
-            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-            raise Exception("Did not insert all games")
+    #     if games_res.rowcount != len(movies):
+    #         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    #         raise Exception("Did not insert all games")
 
-        response.status_code = status.HTTP_201_CREATED
-        print("Reset finished.")
+    #     response.status_code = status.HTTP_201_CREATED
         return {"status": "Reset finished"}
-    except Exception as e:
-            print("Reset failed", e)
-            return {"status": "Reset failed"}
+    # except Exception as e:
+    #         print("Reset failed", e)
+    #         return {"status": "Reset failed"}
