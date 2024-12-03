@@ -2,13 +2,13 @@
 
 ## Table of contents
 
-### User Functions
+### 1. [User Functions](#user-functions) 
 - `/users` (GET)
 - `/users` (POST)
 - `/users/{user_name}` (GET)
 - `/users/{user_id}` (DELETE)
 
-### Following
+### 2. [Following](#following)
 - `/users/{user_id}/followees` (GET)
 - `/users/{user_id}/followees` (POST)
 - `/users/{user_id}/followees/catalogs` (GET)
@@ -16,46 +16,46 @@
 - `/users/{user_id}/followees/follow-recommendations` (GET)
 - `/users/{user_id}/followees/{user_name}` (DELETE)
 
-### Catalogs
+### 3. [Catalogs](#catalogs)
 - `/users/{user_id}/catalogs` (GET)
 - `/users/{user_id}/catalogs` (POST)
 - `/users/{user_id}/catalogs/{catalog_id}` (PUT)
 - `/users/{user_id}/catalogs/{catalog_id}` (DELETE)
 
-### games
+### 4. [games](#games)
 - `/games` (GET)
 
-### game_entries
+### 5. [game_entries](#game_entries)
 - `/users/{user_id}/catalogs/{catalog_name}/game-entries` (GET)
 - `/users/{user_id}/catalogs/{catalog_name}/game-entries` (POST)
 - `/users/{user_id}/catalogs/{catalog_name}/game-entries/{entry_title}` (PUT)
 - `/users/{user_id}/catalogs/{catalog_name}/game-entries/{entry_title}` (DELETE)
 
-### movies
+### 6. [movies](#movies)
 - `/movies` (GET)
 
-### movies_entries
+### 7. [movies_entries](#movie_entries)
 - `/users/{user_id}/catalogs/{catalog_name}/movie-entries` (GET)
 - `/users/{user_id}/catalogs/{catalog_name}/movie-entries` (POST)
 - `/users/{user_id}/catalogs/{catalog_name}/movie-entries/{entry_title}` (PUT)
 - `/users/{user_id}/catalogs/{catalog_name}/movie-entries/{entry_title}` (DELETE)
 
-### books
+### 8. [books](#books)
 - `/books` (GET)
 
-### book_entries
+### 9. [book_entries](#book_entries)
 - `/users/{user_id}/catalogs/{catalog_name}/book-entries` (GET)
 - `/users/{user_id}/catalogs/{catalog_name}/book-entries` (POST)
 - `/users/{user_id}/catalogs/{catalog_name}/book-entries/{entry_title}` (PUT)
 - `/users/{user_id}/catalogs/{catalog_name}/book-entries/{entry_title}` (DELETE)
 
-### other_entries
+### 10. [other_entries](#other_entries)
 - `/users/{user_id}/catalogs/{catalog_name}/other-entries` (GET)
 - `/users/{user_id}/catalogs/{catalog_name}/other-entries` (POST)
 - `/users/{user_id}/catalogs/{catalog_name}/other-entries/{entry_title}` (PUT)
 - `/users/{user_id}/catalogs/{catalog_name}/other-entries/{entry_title}` (DELETE)
 
-### Admin
+### 11. [Admin](#admin)
 - `/admin/reset` (POST)
 
 # **user functions**
@@ -71,6 +71,7 @@ Searches all user based on the query parameters. Useful to find your username or
 - `direction` (optional): Display order of the results. Values: `asc`, `desc` (Default: `asc`)
 
 **Response**
+- HTTP_200_OK
 
 A JSON response is produced with the following information:
 - `page`: An int representing the page of results that are shown.
@@ -78,42 +79,60 @@ A JSON response is produced with the following information:
 - `content`: An array of JSON objects representing users.
   - `name`: A string representing the Name of a user.
 
+**On Error Response**
+- HTTP_400_BAD_REQUEST
+- HTTP_404_NOT_FOUND
+``` json
+{
+  "error": "string"
+}
+```
+
 ## `/users` (POST)
 
 Create a new user account with the specified unique name. gives status feedback for success or any errors. Once created, the new user may login to fetch their unique user id.
 
-**Request**:
+**Query Parameters**:
+-  `username`: "string"
 
-```json
+**Response**:
+- HTTP_201_CREATED
+``` json
 {
-  "username": "string"
+  "response": "string"
 }
 ```
 
-**Response**:
+**On Error Response**:
+- HTTP_409_CONFLICT
+``` json
+{
+  "error": "string"
+}
+```
 
-```
-HTTP 201 Created
-"OK"
-```
 
 ## `/users/{user_name}` (GET)
 
 Returns the user_id of the username passed in. When making calls with a user_id it un-restricts all private catalogs and entries. Also allows for appending and deleting catalogs and entries. (This is our method of logging in as a user, alternatively users can be searched by `GET /users`)
 
-**Request**:
+**Query Parameters**:
 
-```json
-{
-  "name": "string"
-}
-```
+- `name`: "string"
 
 **Response**:
 
 ```json
 {
-  "user_id": "UUID"
+  "user_id": "integer"
+}
+```
+
+**On Error Response**
+- HTTP_404_NOT_FOUND
+``` json
+{
+  "error": "string"
 }
 ```
 
@@ -130,9 +149,19 @@ Delete user_id's account and all information related to it. Gives a confirmation
 ```
 
 **Response**:
-
+- HTTP_204_NO_CONTENT
+``` json
+{
+  "response": "string"
+}
 ```
-HTTP 204 No Content
+
+**On Error Response**
+- HTTP_404_NOT_FOUND
+```json
+{
+  "error": "string"
+}
 ```
 
 # **following**
@@ -147,6 +176,7 @@ Gets a list of all users that user_id is following. The list will have 25 entrie
 - `name`(Optional): Filter results by name.
 - `direction` (Optional): Display results in either alphebetical order (`asc`) or reverse alphebetical order (`desc`). (Default: `asc`)
 **Response**:
+- HTTP_200_OK
 
 A JSON response is produced with the following information:
 - `page`: An integer representing the page of results being queried. 
@@ -154,22 +184,40 @@ A JSON response is produced with the following information:
 - `content`: An array of JSON objects representing the users returned by the query.
   - `name`: A string representing the name of a person that user_id is following.
 
+**On Error Response**
+- HTTP_400_BAD_REQUEST
+- HTTP_404_NOT_FOUND
+``` json
+{
+  "error": "string"
+}
+```
+
 ## `/users/{user_id}/followees` (POST) 
 
 Adds the user by username to user_id’s following list.
 
-**Request**:
+**Query Parameters**:
 
-```json
+- `user_id`: "integer"
+- `user_name`: "string"
+
+**Response**:
+- HTTP_201_CREATED
+
+``` json
 {
- "user_name": "string"
+  "response": "string"
 }
 ```
 
-**Response**:
-
-```
-HTTP 201 Created
+**On Error Response**
+- HTTP_400_BAD_REQUEST
+- HTTP_404_NOT_FOUND
+``` json
+{
+  "error": "string"
+}
 ```
 
 ## `/users/{user_id}/followees/catalogs` (GET)
@@ -184,6 +232,7 @@ Returns all public catalogs from follower_name
 - `page` (optional): A specific page of catalogs in the query. Max results per page is 25. (default: 1)
 
 **Response**:
+- HTTP_200_OK
 
 A JSON response is produced with the following information:
 - `page`: An Integer representing a page of results.
@@ -192,6 +241,15 @@ A JSON response is produced with the following information:
   - `user`: A string representing the name of the owner of the catalog.
   - `catalog_name`: A string representing the name of the catalog. 
   - `type`: A string stateing the type of catalog. either 'movies', 'books', 'games', or 'other'.
+
+**On Error Response**
+- HTTP_400_BAD_REQUEST
+- HTTP_404_NOT_FOUND
+``` json
+{
+  "error": "string"
+}
+```
 
 ## `/users/{user_id}/followees/entries` (GET)
 
@@ -208,6 +266,7 @@ Returns all entries in a followed user's public catalog where the recommend attr
 
 
 **Response**:
+- HTTP_200_OK
 
 A JSON response is produced with the following information:
 - `page`: An integer respresenting the page of results.
@@ -218,11 +277,21 @@ A JSON response is produced with the following information:
   - `title`: A String representing the title of the entry. 
   - Other details vary on the type of entry searched for.
 
+**On Error Response**
+- HTTP_400_BAD_REQUEST
+- HTTP_404_NOT_FOUND
+``` json
+{
+  "error": "string"
+}
+```
+
 ## `/users/{user_id}/followees/follow-recommendations` (GET)
 
 Return a list of recommended users for user_id to follow. This list of recommendations is based on who you follow and who other people with similar follow lists follow. If you are not following anyone then a list of the top 10 most followed people is shown as recommendations.
 
 **Response**:
+- HTTP_200_OK
 
 ```json
 [
@@ -236,18 +305,28 @@ Return a list of recommended users for user_id to follow. This list of recommend
 
 Delete the user by name from user_id's follow list.
 
-**Request**:
+**Query Parameters**:
 
-```json
+- `user_id`: "integer"
+- `user_name`: "string"
+
+**Response**:
+- HTTP_200_OK
+
+``` json
 {
-  "follower_name": "string"
+  "response": "string"
 }
 ```
 
-**Response**:
+**On Error Response**
+- HTTP_404_NOT_FOUND
+- HTTP_501_NOT_IMPLEMENTED
 
-```
-HTTP 204 No Content
+``` json
+{
+  "error": "string"
+}
 ```
 
 # **catalogs**
@@ -264,6 +343,7 @@ Searches through a user’s catalogs using (optional) specified queries.
 - `direction` (optional): The order in which to display the results. (`asc` or `desc`, default: `asc`)
 
 **Response**:
+- HTTP_200_OK
 
 A JSON response is produced with the following information:
 - `page`: An integer representing the page of results.
@@ -273,9 +353,22 @@ A JSON response is produced with the following information:
   - `type`: A string representing the type of entries for the catalog.
   - `private`: A boolean where `true` means the catalog is private and `false` means the catalog is public.
 
+**On Error Response**
+- HTTP_400_BAD_REQUEST
+- HTTP_404_NOT_FOUND
+``` json
+{
+  "error": "string"
+}
+```
+
 ## `/users/{user_id}/catalogs` (POST)
 
 Creates a catalog for user_id. The request body has all the fields to be filled in for the catalog.
+
+**Query Parameters**
+
+- `user_id`: "integer"
 
 **Request**:
 
@@ -288,14 +381,32 @@ Creates a catalog for user_id. The request body has all the fields to be filled 
 ```
 
 **Response**:
+- HTTP_201_CREATED
 
+``` json
+{
+  "response": "string"
+}
 ```
-HTTP 201 Created
+
+**On Error Response**
+- HTTP_409_CONFLICT
+- HTTP_500_INTERNAL_SERVER_ERROR
+
+``` json
+{
+  "error": "string"
+}
 ```
 
 ## `/users/{user_id}/catalogs/{catalog_name}` (PUT)
 
 Used to update the name or privacy of a catalog.
+
+**Query Parameters**
+
+- `user_id`: "integer"
+- `catalog_name`: "string"
 
 **Request**:
 
@@ -307,19 +418,48 @@ Used to update the name or privacy of a catalog.
 ```
 
 **Response**:
+- HTTP_202_ACCEPTED
 
+``` json
+{
+  "response": "string"
+}
 ```
-HTTP 202 Accepted
+
+**On Error Response**
+- HTTP_404_NOT_FOUND
+
+``` json
+{
+  "error": "string"
+}
 ```
 
 ## `/users/{user_id}/catalogs/{catalog_id}` (DELETE)
 
 Deletes the specified catalog by id from a user’s list of catalogs.
 
-**Response**:
+**Query Parameters**
 
+- `user_id`: "integer"
+- `catalog_name`: "string"
+
+**Response**:
+- HTTP_204_NO_CONTENT
+
+``` json
+{
+  "response": "string"
+}
 ```
-HTTP 204 No Content
+
+**On Error Response**
+- HTTP_404_NOT_FOUND
+
+``` json
+{
+  "error": "string"
+}
 ```
 
 # **games**
@@ -336,6 +476,7 @@ Searches the games database for video game metadata.
 - `sort_col` (optional): The attribute to order results by. (Default: `game_title`)
 
 **Response**:
+- HTTP_200_OK
 
 A JSON response is produced with the following information:
 - `page`: An integer representing the page of results queried.
@@ -343,6 +484,15 @@ A JSON response is produced with the following information:
 - `content`: An array of JSON objects representing the games returned by the query.
   - `game_title`: A String representing the title of the game.
   - `year`: A integer representing the year the game was released.
+
+**On Error Response**
+- HTTP_400_BAD_REQUEST
+- HTTP_404_NOT_FOUND
+``` json
+{
+  "error": "string"
+}
+```
 
 # **game_entries**
 
@@ -358,6 +508,7 @@ Gets a list of both public and private entries in catalog_name under user_id. Th
 - `direction` (optional): The sort order of the result. Possible values: (Default) `asc`, `desc`
 
 **Response**:
+- HTTP_200_OK
 
 JSON object of the following:
 
@@ -373,9 +524,22 @@ A JSON response is produced with the following information:
   - `play_again`: A boolean presenting if you would play again.
   - `opinion`: A string containing any miscellaneous opinions on the game.
 
+**On Error Response**
+- HTTP_400_BAD_REQUEST
+- HTTP_404_NOT_FOUND
+``` json
+{
+  "error": "string"
+}
+```
+
 ## `/users/{user_id}/catalogs/{catalog_name}/game-entries` (POST)
 
 Creates an entry for user_id in catalog_name. The request body has all the fields to be filled in for the entry.
+
+**Query Parameters**
+- `user_id`: "integer"
+- `catalog_name`: "string"
 
 **Request**:
 
@@ -393,14 +557,31 @@ Creates an entry for user_id in catalog_name. The request body has all the field
 ```
 
 **Response**:
+- HTTP_201_Created
 
+``` json
+ {
+  "response": "string"
+ } 
 ```
-HTTP 201 Created
+
+**On Error Response**
+- HTTP_400_BAD_REQUEST
+
+``` json
+{
+  "error": "string"
+}
 ```
 
 ## `/users/{user_id}/catalogs/{catalog_name}/game-entries/{entry_title}` (PUT)
 
 Updates the entry entry_title in catalog_name under user_id with any of the fields (optional) that are to be updated. The last modified attribute will be updated to the current time for each usage of the PUT request.
+
+**Query Parameters**
+- `user_id`: "integer"
+- `catalog_name`: "string"
+- `entry_title`: "string"
 
 **Request**:
 
@@ -414,19 +595,48 @@ Updates the entry entry_title in catalog_name under user_id with any of the fiel
 ```
 
 **Response**:
+- HTTP_202_ACCEPTED
 
+``` json
+{
+  "response": "string"
+}
 ```
-HTTP 202 Accepted
+
+**On Error Response**
+- HTTP_400_BAD_REQUEST
+
+``` json
+{
+  "error": "string"
+}
 ```
 
 ## `/users/{user_id}/catalogs/{catalog_name}/game-entries/{entry_title}` (DELETE) 
 
 Deletes the entry under user_id in catalog_name with the title entry_title.
 
-**Response**:
+**Query Parameters**
+- `user_id`: "integer"
+- `catalog_name`: "string"
+- `entry_title`: "string"
 
+**Response**:
+- HTTP_204_NO_CONTENT
+
+``` json
+{
+  "response": "string"
+}
 ```
-HTTP 204 No Content
+
+**On Error Response**
+- HTTP_404_NOT_FOUND
+
+``` json
+{
+  "error": "string"
+}
 ```
 
 # **movies**
@@ -443,6 +653,7 @@ Searches the movies database for movie metadata.
 - `sort_col` (optional): The attribute to order results by. (Default: `movie_title`)
 
 **Response**:
+- HTTP_200_OK
 
 A JSON response is produced with the following information:
 - `page`: An integer representing the page of results queried.
@@ -450,6 +661,15 @@ A JSON response is produced with the following information:
 - `content`: An array of JSON objects representing the movies returned by the query
   - `movie_title`: A string of the title of the movie. 
   - `year`: An integer representing the year the movie was released.
+
+**On Error Response**
+- HTTP_400_BAD_REQUEST
+- HTTP_404_NOT_FOUND
+``` json
+{
+  "error": "string"
+}
+```
 
 # **movie_entries**
 
@@ -465,6 +685,7 @@ Gets a list of both public and private entries in catalog_name under user_id. Th
 - `direction` (optional) The sort order of the result. Possible values: (Default) `asc`, `desc`
 
 **Response**:
+- HTTP_200_OK
 
 JSON object of the following:
 
@@ -480,10 +701,22 @@ A JSON response is produced with the following information:
   - `watch_again`: A boolean of whether you would watch the movie again.
   - `opinion`: A string containing any miscellaneous opinions on the movie.
 
+**On Error Response**
+- HTTP_400_BAD_REQUEST
+- HTTP_404_NOT_FOUND
+``` json
+{
+  "error": "string"
+}
+```
 
 ## `/users/{user_id}/catalogs/{catalog_name}/movie-entries` (POST)
 
 Creates an entry for user_id in catalog_name. The request body has all the fields to be filled in for the entry.
+
+**Query Parameters**
+- `user_id`: "integer"
+- `catalog_name`: "string"
 
 **Request**:
 
@@ -501,14 +734,32 @@ Creates an entry for user_id in catalog_name. The request body has all the field
 ```
 
 **Response**:
+- HTTP_201_CREATED
 
+``` json
+{
+  "response": "string"
+}
 ```
-HTTP 201 Created
+
+**On Error Response**
+- HTTP_400_BAD_REQUEST
+
+``` json
+{
+  "error": "string"
+}
 ```
+
 
 ## `/users/{user_id}/catalogs/{catalog_name}/movie-entries/{entry_title}` (PUT)
 
 Updates the entry entry_title in catalog_name under user_id with any of the fields (optional) that are to be updated. The last modified attribute will be updated to the current time for each usage of the PUT request.
+
+**Query Parameters**
+- `user_id`: "integer"
+- `catalog_name`: "string"
+- `entry_title`: "string"
 
 **Request**:
 
@@ -522,19 +773,49 @@ Updates the entry entry_title in catalog_name under user_id with any of the fiel
 ```
 
 **Response**:
+- HTTP_202_ACCEPTED
 
+``` json
+{
+  "response": "string"
+}
 ```
-HTTP 202 Accepted
+
+**On Error Response**
+- HTTP_404_NOT_FOUND
+
+``` json
+{
+  "error": "string"
+}
 ```
+
 
 ## `/users/{user_id}/catalogs/{catalog_name}/movie-entries/{entry_title}` (DELETE) 
 
 Deletes the entry under user_id in catalog_name with the title entry_title.
 
-**Response**:
+**Query Parameters**
+- `user_id`: "integer"
+- `catalog_name`: "string"
+- `entry_title`: "string"
 
+**Response**:
+- HTTP_204_NO_CONTENT
+
+``` json
+{
+  "response": "string"
+}
 ```
-HTTP 204 No Content
+
+**On Error Repsonse**
+- HTTP_404_NOT_FOUND
+
+``` json
+{
+  "error": "string"
+}
 ```
 
 # **books**
@@ -551,6 +832,7 @@ Searches the books database for book metadata.
 - `sort_col` (optional): The attribute to order results by (Default: `book_title`)
 
 **Response**:
+- HTTP_200_OK
 
 A JSON response is produced with the following information:
 - `page`: An integer representing the page of results queried.
@@ -558,6 +840,15 @@ A JSON response is produced with the following information:
 - `content`: An array of JSON objects representing the books returned by the query
   - `book_title`: A string of the title of the book.
   - `author`: A string of the author of the book.
+
+**On Error Response**
+- HTTP_400_BAD_REQUEST
+- HTTP_404_NOT_FOUND
+``` json
+{
+  "error": "string"
+}
+```
 
 # **book_entries**
 
@@ -573,6 +864,7 @@ Gets a list of both public and private entries in catalog_name under user_id. Th
 - `direction` (optional) The sort order of the result. Possible values: (Default) `asc`, `desc`
 
 **Response**:
+- HTTP_200_OK
 
 JSON object of the following:
 
@@ -588,9 +880,22 @@ A JSON response is produced with the following information:
   - `read_again`: A boolen of whether you would read the book again.
   - `opinion`: A string containing any other opinions about the book.
 
+**On Error Response**
+- HTTP_400_BAD_REQUEST
+- HTTP_404_NOT_FOUND
+``` json
+{
+  "error": "string"
+}
+```
+
 ## `/users/{user_id}/catalogs/{catalog_name}/book-entries` (POST)
 
 Creates an entry for user_id in catalog_name. The request body has all the fields to be filled in for the entry.
+
+**Query Parameters**
+- `user_id`: "integer"
+- `catalog_name`: "string"
 
 **Request**:
 
@@ -608,14 +913,31 @@ Creates an entry for user_id in catalog_name. The request body has all the field
 ```
 
 **Response**:
+- HTTP_201_CREATED
 
+``` json
+{
+  "response": "string"
+}
 ```
-HTTP 201 Created
+
+**On Error Response**
+- HTTP_400_BAD_REQUEST
+
+``` json
+{
+  "error": "string"
+}
 ```
 
 ## `/users/{user_id}/catalogs/{catalog_name}/book-entries/{entry_title}` (PUT)
 
 Updates the entry entry_title in catalog_name under user_id with any of the fields (optional) that are to be updated. The last modified attribute will be updated to the current time for each usage of the PUT request.
+
+**Query Parameters**
+- `user_id`: "integer"
+- `catalog_name`: "string"
+- `entry_title`: "string"
 
 **Request**:
 
@@ -628,19 +950,48 @@ Updates the entry entry_title in catalog_name under user_id with any of the fiel
 ```
 
 **Response**:
+- HTTP_202_ACCEPTED
 
+``` json
+{
+  "response": "string"
+}
 ```
-HTTP 202 Accepted
+
+**On Error Response**
+- HTTP_404_NOT_FOUND
+
+``` json
+{
+  "error": "string"
+}
 ```
 
 ## `/users/{user_id}/catalogs/{catalog_name}/book-entries/{entry_title}` (DELETE) 
 
 Deletes the entry under user_id in catalog_name with the title entry_title.
 
-**Response**:
+**Query Parameters**
+- `user_id`: "integer"
+- `catalog_name`: "string"
+- `entry_title`: "string"
 
+**Response**:
+- HTTP_204_NO_CONTENT
+
+```json
+{
+  "response": "string"
+}
 ```
-HTTP 204 No Content
+
+**On Error Response**
+- HTTP_404_NOT_FOUND
+
+``` json
+{
+  "error": "string"
+}
 ```
 
 # **other_entries**
@@ -657,6 +1008,7 @@ Gets a list of both public and private entries in catalog_name under user_id. Th
 - `direction` (optional) The sort order of the result. Possible values: (Default) `asc`, `desc`
 
 **Response**:
+- HTTP_200_OK
 
 JSON object of the following:
 
@@ -666,9 +1018,22 @@ A JSON response is produced with the following information:
 - `results`: An array of JSON objects representing the entries returned by the query
   - The entries will be listed by all relevant information according to the type of entries
 
+**On Error Response**
+- HTTP_400_BAD_REQUEST
+- HTTP_404_NOT_FOUND
+``` json
+{
+  "error": "string"
+}
+```
+
 ## `/users/{user_id}/catalogs/{catalog_name}/other-entries` (POST)
 
 Creates an entry for user_id in catalog_name. The request body has all the fields to be filled in for the entry.
+
+**Query Parameters**
+- `user_id`: "integer"
+- `catalog_name`: "string"
 
 **Request**:
 
@@ -685,14 +1050,31 @@ Creates an entry for user_id in catalog_name. The request body has all the field
 ```
 
 **Response**:
+- HTTP_201_CREATED
+``` json
+{
+  "response": "string"
+}
+```
 
-`HTTP 201 Created`
+**On Error Response**
+- HTTP_400_BAD_REQUEST
+``` json
+{
+  "error": "string"
+}
+```
 
 ## `/users/{user_id}/catalogs/{catalog_name}/other-entries/{entry_title}` (PUT)
 
 Updates the entry entry_title in catalog_name under user_id with any of the fields (optional) that are to be updated. The last modified attribute will be updated to the current time for each usage of the PUT request.
 
-**Request (type=other)**:
+**Query Parameters**
+- `user_id`: "integer"
+- `catalog_name`: "string"
+- `entry_title`: "string"
+
+**Request**:
 
 ```json
 {
@@ -703,17 +1085,46 @@ Updates the entry entry_title in catalog_name under user_id with any of the fiel
 ```
 
 **Response**:
+- HTTP_202_ACCEPTED
 
-`HTTP 202 Accepted`
+``` json
+{
+  "response": "string"
+}
+```
+
+**On Error Response**
+- HTTP_404_NOT_FOUND
+``` json
+{
+  "error": "string"
+}
+```
 
 ## `/users/{user_id}/catalogs/{catalog_name}/other-entries/{entry_title}` (DELETE) 
 
 Deletes the entry under user_id in catalog_name with the title entry_title.
 
-**Response**:
+**Query Parameters**
+- `user_id`: "integer"
+- `catalog_name`: "string"
+- `entry_title`: "string"
 
+**Response**:
+- HTTP_202_ACCEPTED
+
+``` json
+{
+  "response": "string"
+}
 ```
-HTTP 204 No Content
+
+**On Error Response**
+- HTTP_404_NOT_FOUND
+``` json
+{
+  "error": "string"
+}
 ```
 
 # **admin**
@@ -723,5 +1134,19 @@ HTTP 204 No Content
 Resets the state of the database and loads in all movie, game, and book metadata. (Do not use this in practicality)
 
 **Response**:
+- HTTP_200_OK
 
-`HTTP 200 OK`
+``` json
+{
+  "status": "string"
+}
+```
+
+**On Error Response**
+- HTTP_500_INTERNAL_SERVER_ERROR
+
+``` json
+{
+  "status": "string"
+}
+```

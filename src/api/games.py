@@ -17,7 +17,11 @@ class sort_col_games(str, Enum):
 
 @router.get("")
 #                   default page 1, default game_title and year are all, default sorting column is game_title.
-def search_games(page: int = 1, game_title: str = "", year: int = None, sort_col: sort_col_games = sort_col_games.game_title):
+def search_games(response: Response,
+                 page: int = 1,
+                 game_title: str = "", 
+                 year: int = None, 
+                 sort_col: sort_col_games = sort_col_games.game_title):
     """
     Search the games database.
     - page: The page of results to return.
@@ -52,4 +56,4 @@ def search_games(page: int = 1, game_title: str = "", year: int = None, sort_col
         if item.value != sort_col:
             content_statement = content_statement.order_by(item)
 
-    return db.execute_search(stats_statement, content_statement, page)
+    return db.execute_search(stats_statement, content_statement, page, response)

@@ -1,95 +1,100 @@
 # Example workflow 3
 3. Connor hears about a new personal media tracker and wants to use it to keep track of the video games he has played.
-   He creates an account by calling `POST /user/create`. Connor logs in calling `GET /user/login`. After that, he creates a
-   catalog for his games by calling `POST user/{user_id}/catalog` and passing in the title “my_games” and the catalog type of “games”. He then creates
-   an entry using `POST user/{user_id}/catalogs/{catalog_name}/game_entries`. He creates an entry for “Omori” with a rating of 8/10, he played for 200 hours.
-   After creating the entry, he thinks to himself that “Omori” is actually the greatest psychological horror game and wants
-   to change his rating. He calls `PUT /user/{user_id}/catalogs/{catalog_name}/entries/{entry_title}` and passes a new rating of 10/10.
+   He creates an account by calling `POST /users`. Connor logs in calling `GET /users/{user_name}`. After that, he creates a public
+   catalog for his games by calling `POST users/{user_id}/catalogs` and passing in the title “my_games”, the catalog type of “games”, and then a private setting of "false". He then creates
+   an entry using `POST users/{user_id}/catalogs/{catalog_name}/game-entries`. He creates a public entry for the 2020 hit “Omori” with a rating of 8.0/10.0, he played for 200 hours, Connor claims that "Omori" is "such and amazing game that everyone should play" and sets the "play_again" and "recommend" attributes to true. 
+   After creating the entry and playing for 50 more hours, he thinks to himself that “Omori” is actually the greatest psychological horror game ever made and wants
+   to change his rating. He calls `PUT /users/{user_id}/catalogs/{catalog_name}/game-entries/{entry_title}` and passes a new rating of 10.0/10.0.
 
 # Testing results
-### POST /user/create:
+### POST /users:
 #### CURL CALL:
  ```
 curl -X 'POST' \
-'http://127.0.0.1:8000/user_functionsuser/create?name=Connor' \
--H 'accept: application/json' \
--d ''
+  'http://127.0.0.1:8000/users?name=Connor' \
+  -H 'accept: application/json' \
+  -d ''
 ```
 #### CURL RESPONSE:
 ```
-`Response Body: "OK"
-"POST /user/create?name=Connor HTTP/1.1" 201 Created`
+Response Body: "OK"
+"POST /users?name=Connor HTTP/1.1" 201 Created
 ```
-### GET /user/login:
+### GET /users/{user_name}:
 #### CURL CALL:
 ```
-`curl -X 'GET' \
-'http://127.0.0.1:8000/user_functionsuser/login?name=Connor' \
--H 'accept: application/json'`
+curl -X 'GET' \
+  'http://127.0.0.1:8000/users/Connor' \
+  -H 'accept: application/json'
 ```
 #### CURL RESPONSE:
 ```
-`Response Body: 
+Response Body: 
 {
-  "user_id": 14
+  "user_id": 6
 }
-"GET /user/login?name=Connor HTTP/1.1" 200 OK`
+"GET /users/Connor HTTP/1.1" 200 OK
 ```
-### GET /user/{user_id}/catalogs:
+### POST /users/{user_id}/catalogs:
 #### CURL CALL:
 ```
-`curl -X 'POST' \
-'http://127.0.0.1:8000/catalogsuser/14/catalogs' \
--H 'accept: application/json' \
--H 'Content-Type: application/json' \
--d '{
-"name": "my_games",
-"type": "games",
-"private": false`
+curl -X 'POST' \
+  'http://127.0.0.1:8000/users/6/catalogs' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "my_games",
+  "type": "games",
+  "private": false
+}'
 ```
 #### CURL RESPONSE:
 ```
-`Response Body: "OK"
-"POST /user/14/catalogs HTTP/1.1" 201 CREATED`
+Response Body: "Catalog with name my_games created"
+"POST /users/6/catalogs HTTP/1.1" 201 Created
 ```
-### /user/{user_id}/catalogs/{catalog_name}/game_entries
+### POST /users/{user_id}/catalogs/{catalog_name}/game-entries
 #### CURL CALL:
 ```
-`curl -X 'POST' \
-'http://127.0.0.1:8000/entriesuser/14/catalogs/%7Bcatalog_name%7D/game_entries?catalog_id=5' \
--H 'accept: application/json' \
--H 'Content-Type: application/json' \
--d '{
-"title": "Omori",
-"opinion": "This game is great",
-"rating": 8,
-"hours_played": 200,
-"play_again": true,
-"recommend": true,
-"private": true`
+curl -X 'POST' \
+  'http://127.0.0.1:8000/users/6/catalogs/my_games/game-entries' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "title": "Omori",
+  "year": 2020,
+  "opinion": "This is such and amazing game that everyone should play",
+  "rating": 8.0,
+  "hours_played": 200,
+  "play_again": true,
+  "recommend": true,
+  "private": false
+}'
 ```
 #### CURL RESPONSE:
 ```
-`Response Body: "OK"
-"POST /user/14/catalogs/%7Bcatalog_name%7D/game_entries?catalog_id=5 HTTP/1.1" 201 Created`
+Response Body: "Entry successfully created for Omori in my_games"
+"POST /users/6/catalogs/my_games/game-entries HTTP/1.1" 201 Created
 ```   
-### /user/{user_id}/catalogs/{catalog_name}/entries/game_entries
+### PUT /users/{user_id}/catalogs/{catalog_name}/game-entries/Omori
 #### CURL CALL:
 ```
-`curl -X 'PUT' \
-'http://127.0.0.1:8000/entriesuser/14/catalogs/my_games/entries/Omori' \
--H 'accept: application/json' \
--H 'Content-Type: application/json' \
--d '{
-"opinion": "This is the best game ever made!",
-"rating": 10.0,
-"hours_played": 2500,
-"play_again": true
-}'`
+curl -X 'PUT' \
+  'http://127.0.0.1:8000/users/6/catalogs/my_games/game-entries/Omori' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "opinion": "This is such and amazing game that everyone should play",
+  "rating": 10.0,
+  "hours_played": 250,
+  "play_again": true
+}'
 ```
 #### CURL RESPONSE:
-    `Response Body: "OK"
-    "PUT /user/14/catalogs/my_games/entries/Omori HTTP/1.1" 200 OK`
+```
+Response Body: "Entry 'Omori' updated successfully"
+"PUT /users/6/catalogs/my_games/game-entries/Omori HTTP/1.1" 202 Accepted
+```
 
 
     

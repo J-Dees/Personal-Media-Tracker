@@ -1,6 +1,7 @@
 import os
 import dotenv
 import sqlalchemy
+from fastapi import Response, status
 
 def database_connection_url():
     dotenv.load_dotenv()
@@ -8,19 +9,20 @@ def database_connection_url():
     return os.environ.get("POSTGRES_URI")
 
 
-def execute_search(stats_statement, content_statement, page):
+def execute_search(stats_statement, content_statement, page, response : Response):
     with engine.begin() as connection:
         #get stats and then check if page is outside of a valid range.
         stats = connection.execute(stats_statement).fetchone()
         try:
         #If page input is outside of valid range for the search.
             if (stats.total_rows == 0):
+                response.status_code = status.HTTP_404_NOT_FOUND
                 raise Exception("No results for your search.")
             if (page > (stats.total_rows//MAX_PER_PAGE)+1 or page < 1):
+                response.status_code = status.HTTP_400_BAD_REQUEST
                 raise Exception(f"Page is outside of the valid range 1-{(stats.total_rows//MAX_PER_PAGE)+1}")
         except Exception as e:
-            print(e)
-            return str(e)
+            return {"error": str(e)}
         content = connection.execute(content_statement).mappings().fetchall()
 
     return {

@@ -32,6 +32,7 @@ class asc_desc(str, Enum):
 @router.get("")
 def entry_search(user_id: int, 
                  catalog_name: str,
+                 response: Response,
                  page: int = 1, 
                  opinion: str = "",
                  order_by: entries_order_by = entries_order_by.book_title,
@@ -86,7 +87,7 @@ def entry_search(user_id: int,
         if item.value != order_by:
             content_statement = content_statement.order_by(item)
 
-    return db.execute_search(stats_statement, content_statement, page)
+    return db.execute_search(stats_statement, content_statement, page, response)
 
 @router.post("")
 def create_entry(user_id: int, catalog_name: str, entry: book_entries, response: Response):
@@ -167,10 +168,12 @@ def create_entry(user_id: int, catalog_name: str, entry: book_entries, response:
             })
     
     except Exception as e:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-        return f"Failed to create entry. {e}"
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return {"error": f"{e}"}
 
-    return "Successfully inserted book into catalog."
+    response.status_code = status.HTTP_201_CREATED
+    return {"response": "Book entry created."}
+
 
 class update_book_entries(BaseModel):
     opinion: str
@@ -241,11 +244,11 @@ def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: updat
             ), parameters)
     
         response.status_code = status.HTTP_202_ACCEPTED
-        return f"Entry '{entry_title}' updated successfully"
+        return {"response": f"Entry '{entry_title}' updated successfully"}
 
     except Exception as e:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-        return f"Error: {e}"
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return {"error": f"{e}"}
 
 @router.delete("/{entry_title}")
 def delete_entry(user_id: int, catalog_name: str, entry_title: str, response: Response):
@@ -301,9 +304,9 @@ def delete_entry(user_id: int, catalog_name: str, entry_title: str, response: Re
                     )
                 """
             ), {"entry_title": entry_title, "catalog_id": catalog_id.id})
-        response.status_code = status.HTTP_202_ACCEPTED
-        return f"Entry '{entry_title}' deleted successfully"
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return {"response": f"Entry '{entry_title}' deleted successfully"}
 
     except Exception as e:
-        response.status_code = status.HTTP_401_UNAUTHORIZED
-        return f"Error: {e}"
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return {"error": f"{e}"}

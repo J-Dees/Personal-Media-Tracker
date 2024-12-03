@@ -23,6 +23,7 @@ class asc_desc(str, Enum):
 
 @router.get("")
 def get_following(user_id: int, 
+                  response: Response,
                   name: str = "",
                   direction: asc_desc = asc_desc.asc,
                   page: int = 1):
@@ -54,10 +55,11 @@ def get_following(user_id: int,
     else:
         content_statement = content_statement.order_by(db.users.c.name)
 
-    return db.execute_search(stats_statement, content_statement, page)
+    return db.execute_search(stats_statement, content_statement, page, response)
 
 @router.get("/catalogs")
 def view_followees_catalogs(user_id:int , 
+                            response: Response,
                             name: str = "",
                             catalog_name: str = "",
                             direction: asc_desc = asc_desc.asc,
@@ -99,18 +101,21 @@ def view_followees_catalogs(user_id:int ,
     else:
         content_statement = content_statement.order_by(db.catalogs.c.name)
 
-    return db.execute_search(stats_statement, content_statement, page)
+    return db.execute_search(stats_statement, content_statement, page, response)
+
+
 
 @router.get("/entries")
 def get_followees_entries(user_id: int, 
-                    page: int = 1,
-                    following_name: str="",
-                    catalog: str="",
-                    title: str = "",
-                    recommend: bool = False,
-                    order_by: entries_sort_col = entries_sort_col.title,
-                    direction: asc_desc = asc_desc.asc,
-                    return_type: entry_type = entry_type.movies):
+                          response: Response,
+                          page: int = 1,
+                          following_name: str="",
+                          catalog: str="",
+                          title: str = "",
+                          recommend: bool = False,
+                          order_by: entries_sort_col = entries_sort_col.title,
+                          direction: asc_desc = asc_desc.asc,
+                          return_type: entry_type = entry_type.movies):
     """View all public catalog entries of followee's based on query parameters.
         - page: The page of results to return.
         - following_name: A String that each followee's name returned must contain.
@@ -278,7 +283,7 @@ def get_followees_entries(user_id: int,
             if item != sort_col.get(order_by):
                 content_statement = content_statement.order_by(item)
     
-    return db.execute_search(stats_statement, content_statement, page)
+    return db.execute_search(stats_statement, content_statement, page, response)
 
 @router.get("/follow-recommendations")
 def follow_recommendations(user_id: int):
@@ -365,7 +370,7 @@ def follow_user(user_id: int, user_name: str, response: Response):
                         ) AND user_id = :user_id
                     """), {'user_id': user_id, 'user_name': user_name}).scalar_one()
                 response.status_code = status.HTTP_400_BAD_REQUEST
-                return "User already in list of people you follow."
+                return {"error": "User already in list of people you follow."}
             except:
                 new_follow = connection.execute(sqlalchemy.text(
                     """
@@ -375,7 +380,7 @@ def follow_user(user_id: int, user_name: str, response: Response):
                     """), {'user_name': user_name}).scalar_one()
                 if new_follow == user_id:
                     response.status_code = status.HTTP_400_BAD_REQUEST
-                    return "Unable to add yourself to list of people to follow."
+                    return {"error": "Unable to add yourself to list of people to follow."}
                 else:
                     connection.execute(sqlalchemy.text(
                         """
@@ -388,11 +393,11 @@ def follow_user(user_id: int, user_name: str, response: Response):
                             'new_follow': new_follow
                         }
                     )
-                    response.status_code = status.HTTP_200_OK
-                    return "OK"
+                    response.status_code = status.HTTP_201_CREATED
+                    return {"response": "Following added."}
     except:
         response.status_code = status.HTTP_404_NOT_FOUND
-        return "User with requested username does not exist."
+        return {"error": "User with requested username does not exist."}
 
 @router.delete("/{user_name}")
 def unfollow_user(user_id: int, user_name: str, response: Response):
@@ -417,12 +422,12 @@ def unfollow_user(user_id: int, user_name: str, response: Response):
     # Nothing was removed then bad.
     if results.rowcount == 0:
         response.status_code = status.HTTP_404_NOT_FOUND
-        return "User by the requested name not found in list of people you follow."
+        return {"error": "User by the requested name not found in list of people you follow."}
     # One item was removed then good.
     elif results.rowcount == 1:
         response.status_code = status.HTTP_200_OK
-        return "User successfully removed from people you follow."
+        return {"response": "User successfully removed from people you follow."}
     # Multiple removed items. Should never happen since you can only follow each person once and not remove multiple people at a time.
     else:
         response.status_code = status.HTTP_501_NOT_IMPLEMENTED
-        return "Multiple users successfully removed from people you follow. SHOULD NOT HAPPEN."
+        return {"error": "Multiple users successfully removed from people you follow. SHOULD NOT HAPPEN."}

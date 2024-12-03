@@ -21,17 +21,18 @@ def create_new_user(name, response: Response):
                 VALUES (:name)
                 """), {'name': name})
             response.status_code = status.HTTP_201_CREATED
-            return "OK"
+            return {"response": "User created"}
         except:
             response.status_code = status.HTTP_409_CONFLICT
-            return "Username already taken, please choose a different name."
+            return {"error": "Username already taken, please choose a different name."}
     
 class asc_desc(str, Enum):
     asc = "asc"
     desc = "desc"
 
 @router.get("")
-def get_users(page: int = 1, 
+def get_users(response: Response,
+              page: int = 1, 
               name: str = "",
               direction: asc_desc = asc_desc.asc):
     """Lists all users fitting the query parameters.
@@ -59,10 +60,10 @@ def get_users(page: int = 1,
     else:
         content_statement = content_statement.order_by(db.users.c.name)
 
-    return db.execute_search(stats_statement, content_statement, page)
+    return db.execute_search(stats_statement, content_statement, page, response)
 
 @router.get("/{user_name}")
-def login_user(name, response: Response):
+def login_user(user_name, response: Response):
     '''Allows the user to login with their username. 
         - The username must exist.
         - The returned user_id will be used as authentication to modify anything related to the user.'''
@@ -73,29 +74,28 @@ def login_user(name, response: Response):
                 SELECT id
                 FROM users
                 WHERE name = :name
-                """), {'name' : name}).scalar_one()
+                """), {'name' : user_name}).scalar_one()
             return {
                     "user_id": user_id
                     }
         except:
             response.status_code = status.HTTP_404_NOT_FOUND
-            return "User with provided username not found."
+            return {"error": "User with provided username not found."}
 
 @router.delete("/{user_id}")
 def delete_user(user_id, response: Response):
     '''Deletes a user account. 
         - This will remove all traces of the user including catalogs, entries, and followers.'''
 
-    try:
-        with db.engine.begin() as connection:
-            connection.execute(sqlalchemy.text(
-                """
-                DELETE FROM users
-                WHERE id = :user_id
-                """), {'user_id': user_id})
-
-        response.status_code = status.HTTP_204_NO_CONTENT
-        return "Successfully deleted user account and all references."
-    except:
-        response.status_code = status.HTTP_404_NOT_FOUND
-        return "Invalid user id."
+    with db.engine.begin() as connection:
+        results = connection.execute(sqlalchemy.text(
+            """
+            DELETE FROM users
+            WHERE id = :user_id 
+            """), {'user_id': user_id})
+        if results.rowcount != 1:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"error": "Invalid user id."}
+    response.status_code = status.HTTP_206_PARTIAL_CONTENT
+    return {"response": "Successfully deleted user account and all references."}
+    
