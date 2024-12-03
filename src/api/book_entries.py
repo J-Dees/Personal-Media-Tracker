@@ -182,10 +182,12 @@ def create_entry(user_id: int, catalog_name: str, entry: book_entries, response:
             })
     
     except Exception as e:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
         return {"error": f"{e}"}
 
     response.status_code = status.HTTP_201_CREATED
     return {"response": "Book entry created."}
+
 
 class update_book_entries(BaseModel):
     opinion: str
