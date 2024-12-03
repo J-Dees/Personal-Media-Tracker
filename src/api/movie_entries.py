@@ -118,9 +118,10 @@ def create_movie_entry(user_id: int, catalog_name: str, entry: movie_entries, re
                 select 
                     check_catalog_user_relationship(:user_id, :catalog_name, 'movies') as catalog_user_relationship,
                     check_entry_in_catalog(:user_id, :catalog_name, 'movies', :entry_name) as entry_in_catalog,
-                    check_movie_entry_exists(:entry_name, :entry_year) as entry_exists
+                    check_movie_entry_exists(:entry_name, :entry_year) as entry_exists,
+                    check_rating_bounds(:rating) AS within_rating_bounds
                 """
-            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_name": entry.title, "entry_year": entry.year}).first()
+            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_name": entry.title, "entry_year": entry.year, "rating": entry.rating}).first()
 
             if (not valid_request.catalog_user_relationship) :
                 raise Exception("Catalog does not belong to user.")
@@ -130,6 +131,9 @@ def create_movie_entry(user_id: int, catalog_name: str, entry: movie_entries, re
             
             if (not valid_request.entry_exists) :
                 raise Exception("No movie matches that title and year")
+            
+            if (not valid_request.within_rating_bounds):
+                raise Exception("Outside of valid rating range of [0-10].")
 
 
             entry_id = connection.execute(sqlalchemy.text(

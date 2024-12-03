@@ -118,19 +118,22 @@ def create_entry(user_id: int, catalog_name: str, entry: book_entries, response:
                 select 
                     check_catalog_user_relationship(:user_id, :catalog_name, 'books') as catalog_user_relationship,
                     check_entry_in_catalog(:user_id, :catalog_name, 'books', :entry_name) as entry_in_catalog,
-                    check_book_entry_exists(:entry_name, :entry_author) as entry_exists
+                    check_book_entry_exists(:entry_name, :entry_author) as entry_exists,
+                    check_rating_bounds(:rating) AS within_rating_bounds
                 """
-            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_name": entry.title, "entry_author": entry.author}).first()
+            ), {"user_id": user_id, "catalog_name": catalog_name, "entry_name": entry.title, "entry_author": entry.author, "rating": entry.rating}).first()
 
-            if (not valid_request.catalog_user_relationship) :
+            if (not valid_request.catalog_user_relationship):
                 raise Exception("Catalog does not belong to user.")
             
             if (valid_request.entry_in_catalog):
                 raise Exception("Entry already exists in catalog.")
             
-            if (not valid_request.entry_exists) :
+            if (not valid_request.entry_exists):
                 raise Exception("No book matches that title and author")
 
+            if (not valid_request.within_rating_bounds):
+                raise Exception("Outside of valid rating range of [0-10].")
 
             entry_id = connection.execute(sqlalchemy.text(
                 """

@@ -118,13 +118,12 @@ def create_other_entry(user_id: int, catalog_name: str, entry: other_entries, re
                 """
             ), {"user_id": user_id, "catalog_name": catalog_name, "entry_name": entry.title}).first()
 
-            if (not valid_request.catalog_user_relationship) :
+            if (not valid_request.catalog_user_relationship):
                 raise Exception("Catalog does not belong to user.")
             
             if (valid_request.entry_in_catalog):
                 raise Exception("Entry already exists in catalog.")
-            
-
+        
             entry_id = connection.execute(sqlalchemy.text(
                 """
                 INSERT INTO
