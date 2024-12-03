@@ -181,7 +181,7 @@ def create_game_entry(user_id: int, catalog_name: str, entry: game_entries, resp
             })
 
     except Exception as e:
-        response.status_code = status.HTTP_400_BAD_REQUEST
+        response.status_code = status.HTTP_401_UNAUTHORIZED
         return {"error": f"{e}"}
 
     response.status_code = status.HTTP_201_CREATED

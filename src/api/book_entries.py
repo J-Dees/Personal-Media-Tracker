@@ -182,7 +182,6 @@ def create_entry(user_id: int, catalog_name: str, entry: book_entries, response:
             })
     
     except Exception as e:
-        response.status_code = status.HTTP_400_BAD_REQUEST
         return {"error": f"{e}"}
 
     response.status_code = status.HTTP_201_CREATED

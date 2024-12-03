@@ -79,8 +79,6 @@ def create_catalog(user_id: int, entry: catalog_create, response: Response):
         - name: Catalog names must be unique to the user.
         - type: Type must be one of the following values 'books', 'movies', 'games', or 'other'.
         - private: Must be either 'true' or 'false'. 'true' will not allow anyone except you to view the catalog."""
-    # insert into the users catalogs a new catalog with a unqiue catalog id
-    # handle error if user enters invalid type
     entry_dict = entry.dict()
     entry_dict.update({"user_id": user_id})
     with db.engine.begin() as connection:
@@ -113,8 +111,6 @@ class catalog_update(BaseModel):
 def update_catalog(user_id: int, catalog_name: str, catalog_update: catalog_update, response: Response):
     """Updates a catalog name and privacy.
         - You must provide a correct user_id and catalog_name pair."""
-    # update name/type of catalog with catalog id passed by user
-    
     catalog_update_dict =  catalog_update.dict()
     catalog_update_dict.update({"user_id": user_id,
                                 "name": catalog_name})
@@ -134,7 +130,6 @@ def update_catalog(user_id: int, catalog_name: str, catalog_update: catalog_upda
     except:
         response.status_code = status.HTTP_404_NOT_FOUND
         return {"error": f"The catalog {catalog_name} does not exist for the user_id {user_id}"}
-
 
 @router.delete("/{catalog_name}")
 def delete_catalog(user_id: int, catalog_name: str, response: Response):

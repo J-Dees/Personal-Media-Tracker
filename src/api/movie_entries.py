@@ -179,18 +179,18 @@ def create_movie_entry(user_id: int, catalog_name: str, entry: movie_entries, re
             })
     
     except Exception as e:
-        response.status_code = status.HTTP_400_BAD_REQUEST
+        response.status_code = status.HTTP_401_UNAUTHORIZED
         return {"error": f"{e}"}
 
     response.status_code = status.HTTP_201_CREATED
     return {"response": "Game entry created."}
+
 
 class update_movie_entries(BaseModel):
     opinion: str
     rating: float
     date_seen: date
     watch_again: bool
-
 
 @router.put("/{entry_title}")
 def update_entry(user_id: int, catalog_name: str, entry_title: str, entry: update_movie_entries, response: Response):
