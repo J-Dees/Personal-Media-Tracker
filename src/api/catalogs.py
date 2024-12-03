@@ -106,22 +106,23 @@ def update_catalog(user_id: int, catalog_name: str, catalog_update: catalog_upda
     catalog_update_dict =  catalog_update.dict()
     catalog_update_dict.update({"user_id": user_id,
                                 "name": catalog_name})
-    try:
-        with db.engine.begin() as connection:
-            connection.execute(sqlalchemy.text(
-                """
-                UPDATE catalogs
-                SET name = :name, private = :private
-                WHERE (user_id, id) = (
-                    SELECT user_id, id
-                    FROM catalogs
-                    WHERE user_id = :user_id AND name = :name)
-                """), catalog_update_dict)
-        response.status_code = status.HTTP_202_ACCEPTED
-        return {"repsonse": f"Catalog {catalog_name} updated to {catalog_update}"}
-    except:
+
+    with db.engine.begin() as connection:
+        results = connection.execute(sqlalchemy.text(
+            """
+            UPDATE catalogs
+            SET name = :name, private = :private
+            WHERE (user_id, id) = (
+                SELECT user_id, id
+                FROM catalogs
+                WHERE user_id = :user_id AND name = :name)
+            """), catalog_update_dict)
+    if results.rowcount != 1:
         response.status_code = status.HTTP_404_NOT_FOUND
         return {"error": f"The catalog {catalog_name} does not exist for the user_id {user_id}"}
+    response.status_code = status.HTTP_202_ACCEPTED
+    return {"repsonse": f"Catalog {catalog_name} updated to {catalog_update}"}
+    
 
 @router.delete("/{catalog_name}")
 def delete_catalog(user_id: int, catalog_name: str, response: Response):
