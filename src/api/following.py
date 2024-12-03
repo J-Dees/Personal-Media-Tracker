@@ -335,10 +335,11 @@ def follow_recommendations(user_id: int):
                   name
                 from social
                 Join users ON users.id = social.following_id
+                WHERE users.id != :user_id
                 Group by name
                 ORDER BY count(following_id) desc
                 LIMIT 5
-                """)).mappings().fetchall()
+                """), {'user_id': user_id}).mappings().fetchall()
             
             return {
                 "About": "Please friend more people to come up with recommendations. Here is list of some popular people to follow.",

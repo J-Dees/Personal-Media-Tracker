@@ -96,6 +96,6 @@ def delete_user(user_id, response: Response):
         if results.rowcount != 1:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"error": "Invalid user id."}
-    response.status_code = status.HTTP_206_PARTIAL_CONTENT
+    response.status_code = status.HTTP_204_NO_CONTENT
     return {"response": "Successfully deleted user account and all references."}
     
