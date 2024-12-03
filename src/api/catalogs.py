@@ -82,6 +82,7 @@ def create_catalog(user_id: int, entry: catalog_create, response: Response):
     entry_dict = entry.dict()
     entry_dict.update({"user_id": user_id})
     with db.engine.begin() as connection:
+        # Enforces catalog_name/catalog_type uniqueness per user.
         results = connection.execute(sqlalchemy.text(
             """
             INSERT INTO catalogs (user_id, name, type, private) 
