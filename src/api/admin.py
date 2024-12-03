@@ -65,7 +65,7 @@ def reset_db(response: Response):
 
         response.status_code = status.HTTP_201_CREATED
         print("Reset finished.")
-        return f"Reset finished"
+        return {"status": "Reset finished"}
     except Exception as e:
             print("Reset failed", e)
-            return f"Reset failed"
+            return {"status": "Reset failed"}
