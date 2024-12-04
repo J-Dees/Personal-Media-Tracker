@@ -121,10 +121,10 @@ create table
 create table
   public.social (
     user_id bigint not null,
-    follower_id bigint not null,
-    constraint social_pkey primary key (user_id, follower_id),
+    following_id bigint not null,
+    constraint social_pkey primary key (user_id, following_id),
     constraint social_user_id_fkey foreign key (user_id) references users (id) on update cascade on delete cascade,
-    constraint social_follower_id_fkey foreign key (follower_id) references users (id) on update cascade on delete cascade
+    constraint social_following_id_fkey foreign key (following_id) references users (id) on update cascade on delete cascade
   ) tablespace pg_default;
 
 -------------------------------------- Verification Functions --------------------------------------
