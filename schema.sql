@@ -265,3 +265,10 @@ begin
   return result;
 end;
 $$ language plpgsql;
+
+create function check_rating_bounds(rating REAL)
+returns boolean as $$
+begin
+return rating >= 0 and rating <= 10;
+end;
+$$ language plpgsql;
