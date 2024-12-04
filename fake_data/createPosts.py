@@ -17,8 +17,8 @@ with engine.begin() as connection:
         """
         with top_users as (
             select distinct
-            following_id as user_id,
-            count(*) over (partition by following_id) as followers
+            follower_id as user_id,
+            count(*) over (partition by follower_id) as followers
             from
             social
         ),
